@@ -1,3 +1,4 @@
+// ================= FIREBASE CONFIG =================
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBC7i8kUc8VcrjfHzEmbp3B64RkVerrtiw",
   authDomain: "newsflow-cms-bf52b.firebaseapp.com",
@@ -7,3 +8,131 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "617601590958",
   appId: "1:617601590958:web:5226adf8ca8125ee95af3f"
 };
+
+// ================= INIT =================
+let _db = null;
+let _fbReady = false;
+
+(function () {
+  function loadScript(src, cb) {
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = cb;
+    document.head.appendChild(s);
+  }
+
+  loadScript(
+    "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js",
+    () => loadScript(
+      "https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js",
+      () => loadScript(
+        "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js",
+        initFirebase
+      )
+    )
+  );
+})();
+
+function initFirebase() {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  _db = firebase.database();
+  _fbReady = true;
+
+  console.log("✅ Firebase Connected");
+  window.dispatchEvent(new Event("firebase-ready"));
+}
+
+// ================= SAVE =================
+async function fbSavePost(post) {
+  if (!_fbReady || !_db) return;
+
+  const clean = {
+    ...post,
+    createdAt: post.createdAt || Date.now(),
+    updatedAt: Date.now(),
+    views: post.views || 0
+  };
+
+  try {
+    await _db.ref("posts/" + clean.id).update(clean);
+  } catch (e) {
+    console.error("Save Error:", e);
+  }
+}
+
+// ================= LOAD =================
+async function fbLoadPosts() {
+  if (!_fbReady || !_db) return [];
+
+  try {
+    const snap = await _db.ref("posts")
+      .orderByChild("updatedAt")
+      .limitToLast(50)
+      .once("value");
+
+    const data = snap.val() || {};
+
+    return Object.values(data).sort(
+      (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)
+    );
+
+  } catch (e) {
+    console.error("Load Error:", e);
+    return [];
+  }
+}
+
+// ================= REAL-TIME =================
+function fbListenPosts(callback) {
+  if (!_fbReady || !_db) return;
+
+  _db.ref("posts")
+    .orderByChild("updatedAt")
+    .limitToLast(50)
+    .on("value", snap => {
+      const data = snap.val() || {};
+      callback(Object.values(data));
+    });
+}
+
+// ================= DELETE =================
+async function fbDeletePost(id) {
+  if (!_fbReady || !_db) return;
+
+  try {
+    await _db.ref("posts/" + id).remove();
+  } catch (e) {
+    console.error("Delete Error:", e);
+  }
+}
+
+// ================= VIEWS =================
+function fbIncrementViews(id) {
+  if (!_fbReady || !_db) return;
+
+  const ref = _db.ref("posts/" + id + "/views");
+  ref.transaction(v => (v || 0) + 1);
+}
+
+// ================= AUTH =================
+async function fbLogin(email, pass) {
+  if (!_fbReady) return { ok: false };
+
+  try {
+    const res = await firebase.auth().signInWithEmailAndPassword(email, pass);
+    return { ok: true, user: res.user };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function fbLogout() {
+  if (!_fbReady) return;
+  await firebase.auth().signOut();
+}
+
+function fbOnAuth(cb) {
+  if (!_fbReady) return;
+
+  firebase.auth().onAuthStateChanged(user => cb(user));
+}

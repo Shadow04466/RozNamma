@@ -1,16 +1,9 @@
-{
-  "hosting": {
-    "public": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  }
-}
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBC7i8kUc8VcrjfHzEmbp3B64RkVerrtiw",
+  authDomain: "newsflow-cms-bf52b.firebaseapp.com",
+  databaseURL: "https://newsflow-cms-bf52b-default-rtdb.firebaseio.com",
+  projectId: "newsflow-cms-bf52b",
+  storageBucket: "newsflow-cms-bf52b.firebasestorage.app",
+  messagingSenderId: "617601590958",
+  appId: "1:617601590958:web:5226adf8ca8125ee95af3f"
+};

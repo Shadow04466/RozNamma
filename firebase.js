@@ -10,13 +10,13 @@
 
 // ★★★ یہاں اپنا Firebase config ڈالیں ★★★
 const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  apiKey:            "AIzaSyBmyUggR2W4z3LI0W3JnfCe-g8zrSGwj8A",
+  authDomain:        "newsflow-cms.firebaseapp.com",
   databaseURL:       "https://newsflow-cms-default-rtdb.firebaseio.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+  projectId:         "newsflow-cms",
+  storageBucket:     "newsflow-cms.firebasestorage.app",
+  messagingSenderId: "581590158032",
+  appId:             "1:581590158032:web:3158f61a1b737fc3c2acd5"
 };
 // ★★★ اوپر والی values Firebase Console سے copy کریں ★★★
 

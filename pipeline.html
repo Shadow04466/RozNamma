@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NewsFlow Pipeline — Auto Content Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D0F14;
+  --surface:#141720;
+  --surface2:#1C2030;
+  --surface3:#232840;
+  --border:#2A2F45;
+  --border2:#353B55;
+  --green:#00D68F;
+  --green-dim:#00D68F22;
+  --red:#FF4560;
+  --red-dim:#FF456022;
+  --amber:#FFB347;
+  --amber-dim:#FFB34722;
+  --blue:#4D9FFF;
+  --blue-dim:#4D9FFF22;
+  --purple:#A78BFA;
+  --text:#E8EAF0;
+  --muted:#6B7080;
+  --muted2:#3A404E;
+  --font:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --head:'Playfair Display',serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh}
+
+/* ===== TOPBAR ===== */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:20px;height:56px;position:sticky;top:0;z-index:100}
+.logo{font-family:var(--head);font-size:22px;color:#fff;display:flex;align-items:center;gap:10px}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.status-pill{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);padding:5px 12px;font-size:12px;font-weight:600;letter-spacing:.04em}
+.status-dot{width:6px;height:6px;border-radius:50%}
+.dot-green{background:var(--green)}
+.dot-amber{background:var(--amber);animation:pulse 1.5s infinite}
+.dot-red{background:var(--red)}
+
+/* ===== LAYOUT ===== */
+.layout{display:grid;grid-template-columns:380px 1fr;min-height:calc(100vh - 56px)}
+.panel-left{background:var(--surface);border-right:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;max-height:calc(100vh - 56px);position:sticky;top:56px}
+.panel-right{padding:20px;overflow-y:auto;max-height:calc(100vh - 56px)}
+
+/* ===== SECTION HEADERS ===== */
+.sec-head{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:12px}
+
+/* ===== SOURCE CONFIG ===== */
+.source-box{background:var(--surface2);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:12px}
+.label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:13px;padding:8px 12px;outline:none;transition:border-color .2s}
+.input:focus{border-color:var(--blue)}
+.input::placeholder{color:var(--muted)}
+.select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:13px;padding:8px 12px;outline:none;cursor:pointer}
+.select option{background:var(--bg)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* ===== BUTTONS ===== */
+.btn{font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.06em;padding:9px 18px;cursor:pointer;border:none;transition:all .2s;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px}
+.btn-green{background:var(--green);color:#000}
+.btn-green:hover{background:#00f0a0}
+.btn-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red)}
+.btn-red:hover{background:var(--red);color:#fff}
+.btn-blue{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue)}
+.btn-blue:hover{background:var(--blue);color:#fff}
+.btn-ghost{background:var(--surface3);color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.btn-amber{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber)}
+.btn-amber:hover{background:var(--amber);color:#000}
+.btn-full{width:100%;justify-content:center}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ===== SOURCES LIST ===== */
+.source-item{background:var(--surface2);border:1px solid var(--border);padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px;position:relative}
+.si-url{font-family:var(--mono);font-size:11px;color:var(--blue);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.si-interval{font-size:10px;background:var(--surface3);padding:2px 8px;color:var(--muted);font-weight:600}
+.si-status{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.si-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px}
+.si-del:hover{color:var(--red)}
+
+/* ===== COUNTDOWN ===== */
+.countdown-box{background:var(--surface2);border:1px solid var(--border);padding:14px;text-align:center}
+.countdown-num{font-family:var(--mono);font-size:36px;font-weight:600;color:var(--green);letter-spacing:-.02em}
+.countdown-label{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+.progress-bar{height:3px;background:var(--border);margin-top:12px;overflow:hidden}
+.progress-fill{height:100%;background:var(--green);transition:width .5s linear}
+
+/* ===== STATS ===== */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-box{background:var(--surface2);border:1px solid var(--border);padding:12px}
+.stat-val{font-size:24px;font-weight:700;line-height:1}
+.stat-lbl{font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
+.val-green{color:var(--green)}
+.val-amber{color:var(--amber)}
+.val-blue{color:var(--blue)}
+.val-red{color:var(--red)}
+
+/* ===== LOG ===== */
+.log-box{background:var(--bg);border:1px solid var(--border);padding:12px;font-family:var(--mono);font-size:11px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+.log-box::-webkit-scrollbar{width:4px}
+.log-box::-webkit-scrollbar-thumb{background:var(--border2)}
+.log-entry{display:flex;gap:8px;align-items:flex-start}
+.log-time{color:var(--muted);flex-shrink:0}
+.log-msg-g{color:var(--green)}
+.log-msg-r{color:var(--red)}
+.log-msg-a{color:var(--amber)}
+.log-msg-b{color:var(--blue)}
+.log-msg-w{color:var(--muted)}
+
+/* ===== QUEUE TABS ===== */
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{padding:10px 20px;font-size:12px;font-weight:600;letter-spacing:.04em;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:var(--text);border-bottom-color:var(--green)}
+.tab-badge{background:var(--surface3);color:var(--muted);font-size:10px;padding:1px 6px;margin-left:6px;border-radius:10px}
+.tab-badge.new{background:var(--green-dim);color:var(--green)}
+
+/* ===== ARTICLE CARDS ===== */
+.article-card{background:var(--surface);border:1px solid var(--border);padding:18px;margin-bottom:12px;transition:border-color .2s;position:relative}
+.article-card:hover{border-color:var(--border2)}
+.ac-source{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.ac-badge{font-size:9px;font-weight:700;letter-spacing:.08em;padding:2px 7px;text-transform:uppercase}
+.badge-new{background:var(--green-dim);color:var(--green);border:1px solid var(--green)}
+.badge-rewriting{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber)}
+.badge-ready{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue)}
+.badge-published{background:var(--surface3);color:var(--muted);border:1px solid var(--border)}
+.ac-title-orig{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;line-height:1.4;font-style:italic}
+.ac-title-new{font-family:var(--head);font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.3}
+.ac-excerpt{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+.ac-content-preview{font-size:12px;color:var(--muted);line-height:1.6;padding:10px 12px;background:var(--surface2);border-left:3px solid var(--border2);margin-bottom:12px;max-height:120px;overflow-y:auto;white-space:pre-wrap}
+.ac-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.ac-tag{font-size:10px;font-weight:600;letter-spacing:.06em;padding:3px 8px;background:var(--surface3);color:var(--muted);border:1px solid var(--border)}
+.ac-actions{display:flex;gap:8px;flex-wrap:wrap}
+.divider-h{height:1px;background:var(--border);margin:8px 0}
+.ai-indicator{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--purple);margin-bottom:8px}
+.ai-dots{display:flex;gap:3px}
+.ai-dot{width:4px;height:4px;border-radius:50%;background:var(--purple);animation:ai-bounce .6s infinite}
+.ai-dot:nth-child(2){animation-delay:.15s}
+.ai-dot:nth-child(3){animation-delay:.3s}
+@keyframes ai-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* ===== EMPTY STATE ===== */
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:.4}
+.empty-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+
+/* ===== API KEY NOTICE ===== */
+.api-notice{background:var(--amber-dim);border:1px solid var(--amber);padding:10px 12px;font-size:11px;color:var(--amber);display:flex;align-items:flex-start;gap:8px;margin-bottom:10px}
+.api-notice.hidden{display:none}
+
+/* ===== PROVIDER TABS ===== */
+.provider-tab{background:var(--surface2);border:1px solid var(--border);padding:8px 6px;cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px}
+.provider-tab:hover{border-color:var(--border2);background:var(--surface3)}
+.provider-tab.active{border-color:var(--blue);background:var(--blue-dim)}
+.provider-tab.active .pt-name{color:var(--blue)}
+.pt-icon{font-size:14px;line-height:1}
+.pt-name{font-size:11px;font-weight:700;color:var(--text);letter-spacing:.02em}
+.pt-sub{font-size:9px;color:var(--muted);letter-spacing:.03em}
+.model-tag{background:var(--surface3);border:1px solid var(--border);padding:2px 8px;font-size:10px;font-family:var(--mono);color:var(--muted);white-space:nowrap}
+.model-tag.fast{color:var(--green);border-color:var(--green)}
+.model-tag.smart{color:var(--blue);border-color:var(--blue)}
+.model-tag.free{color:var(--amber);border-color:var(--amber)}
+
+/* ===== MODAL ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);width:100%;max-width:700px;max-height:90vh;overflow-y:auto}
+.modal-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-head h3{font-family:var(--head);font-size:20px}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:20px;display:flex;flex-direction:column;gap:14px}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+.content-area-edit{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:14px;padding:12px;min-height:200px;resize:vertical;outline:none;line-height:1.7}
+.content-area-edit:focus{border-color:var(--blue)}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:13px;font-weight:500;padding:12px 18px;z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;font-family:var(--font)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2)}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .panel-left{position:relative;max-height:none;top:0}
+  .panel-right{max-height:none}
+  .row2,.row3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    NewsFlow Pipeline
+  </div>
+  <div style="font-size:11px;color:var(--muted);font-family:var(--mono)">AUTO CONTENT MANAGER v3.0 — 6 AI Providers</div>
+  <a href="index.html" style="display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);padding:5px 14px;font-size:12px;font-weight:600;color:var(--muted);text-decoration:none;letter-spacing:.04em;transition:all .2s" onmouseover="this.style.color='#fff';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">&#8592; News Site</a>
+  <a href="guide.html" style="display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);padding:5px 14px;font-size:12px;font-weight:600;color:var(--muted);text-decoration:none;letter-spacing:.04em;transition:all .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted)'">📋 Guide</a>
+  <a href="deploy.html" style="display:flex;align-items:center;gap:6px;background:var(--blue-dim);border:1px solid var(--blue);padding:5px 14px;font-size:12px;font-weight:600;color:var(--blue);text-decoration:none;letter-spacing:.04em;transition:all .2s" onmouseover="this.style.background='var(--blue)';this.style.color='#000'" onmouseout="this.style.background='var(--blue-dim)';this.style.color='var(--blue)'">🚀 Deploy</a>
+  <div class="topbar-right">
+    <div class="status-pill">
+      <div class="status-dot dot-green" id="pipeline-dot"></div>
+      <span id="pipeline-status">IDLE</span>
+    </div>
+    <div class="status-pill" style="font-family:var(--mono);font-size:11px">
+      Sources: <span id="source-count" style="color:var(--green);margin-left:4px">0</span>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT PANEL — CONFIG -->
+  <div class="panel-left">
+
+    <!-- AI MODEL CONFIG -->
+    <div>
+      <div class="sec-head">AI Model Settings</div>
+
+      <!-- PROVIDER TABS -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:12px" id="provider-tabs">
+        <div class="provider-tab active" onclick="selectProvider('anthropic',this)" data-p="anthropic">
+          <div class="pt-icon">🟠</div><div class="pt-name">Claude</div><div class="pt-sub">Anthropic</div>
+        </div>
+        <div class="provider-tab" onclick="selectProvider('openai',this)" data-p="openai">
+          <div class="pt-icon">⚫</div><div class="pt-name">GPT</div><div class="pt-sub">OpenAI</div>
+        </div>
+        <div class="provider-tab" onclick="selectProvider('gemini',this)" data-p="gemini">
+          <div class="pt-icon">🔵</div><div class="pt-name">Gemini</div><div class="pt-sub">Google</div>
+        </div>
+        <div class="provider-tab" onclick="selectProvider('groq',this)" data-p="groq">
+          <div class="pt-icon">🟣</div><div class="pt-name">Groq</div><div class="pt-sub">LLaMA · Mixtral</div>
+        </div>
+        <div class="provider-tab" onclick="selectProvider('mistral',this)" data-p="mistral">
+          <div class="pt-icon">🔴</div><div class="pt-name">Mistral</div><div class="pt-sub">Mistral AI</div>
+        </div>
+        <div class="provider-tab" onclick="selectProvider('cohere',this)" data-p="cohere">
+          <div class="pt-icon">🟢</div><div class="pt-name">Cohere</div><div class="pt-sub">Command R</div>
+        </div>
+      </div>
+
+      <!-- MODEL SELECT -->
+      <div style="margin-bottom:10px">
+        <div class="label">Model</div>
+        <select class="select" id="model-select"></select>
+      </div>
+
+      <!-- API KEY -->
+      <div class="api-notice" id="api-notice"><span>⚠</span><span id="api-notice-text">API key required.</span></div>
+      <div>
+        <div class="label">API Key</div>
+        <input type="password" class="input" id="api-key" placeholder="Paste your API key..." oninput="onApiKeyInput()">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+          <div style="font-size:10px;color:var(--muted)">Stored locally only — never shared</div>
+          <a id="api-key-link" href="#" target="_blank" style="font-size:10px;color:var(--blue)">Get key ↗</a>
+        </div>
+      </div>
+
+      <!-- MODEL INFO BADGE -->
+      <div id="model-info-badge" style="background:var(--surface2);border:1px solid var(--border);padding:8px 12px;font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap"></div>
+    </div>
+
+    <!-- ADD SOURCE -->
+    <div>
+      <div class="sec-head">Add Target Source</div>
+      <div class="source-box">
+        <div>
+          <div class="label">Target Website URL</div>
+          <input type="url" class="input" id="new-url" placeholder="https://geo.tv/latest-news" id="new-url">
+        </div>
+        <div class="row2">
+          <div>
+            <div class="label">Check Every</div>
+            <select class="select" id="new-interval">
+              <option value="30">Every 30 min</option>
+              <option value="15">Every 15 min</option>
+              <option value="60">Every 1 hour</option>
+              <option value="120">Every 2 hours</option>
+              <option value="5">Every 5 min (test)</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">Category</div>
+            <select class="select" id="new-cat">
+              <option>Pakistan</option>
+              <option>World</option>
+              <option>Business</option>
+              <option>Tech</option>
+              <option>Sports</option>
+              <option>Entertainment</option>
+              <option>Health</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="label">Rewrite Style (AI Instruction)</div>
+          <select class="select" id="new-style">
+            <option value="rewrite">Rewrite in own words (English)</option>
+            <option value="urdu">Translate & rewrite in Urdu</option>
+            <option value="expand">Expand with analysis</option>
+            <option value="short">Shorten to key points</option>
+            <option value="seo">SEO-optimized rewrite</option>
+            <option value="formal">Formal news style</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">Target Keywords (SEO)</div>
+          <input type="text" class="input" id="new-keywords" placeholder="e.g. artificial intelligence, economy, cricket...">
+        </div>
+        <button class="btn btn-green btn-full" onclick="addSource()">+ Add Source</button>
+      </div>
+    </div>
+
+    <!-- ACTIVE SOURCES -->
+    <div>
+      <div class="sec-head">Active Sources (<span id="sources-badge">0</span>)</div>
+      <div id="sources-list">
+        <div style="font-size:12px;color:var(--muted);padding:12px;text-align:center">No sources added yet</div>
+      </div>
+    </div>
+
+    <!-- COUNTDOWN -->
+    <div>
+      <div class="sec-head">Next Auto-Fetch</div>
+      <div class="countdown-box">
+        <div class="countdown-num" id="countdown-display">--:--</div>
+        <div class="countdown-label" id="countdown-source">Add a source to start</div>
+        <div class="progress-bar"><div class="progress-fill" id="countdown-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div>
+      <div class="sec-head">Session Stats</div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-val val-blue" id="stat-fetched">0</div>
+          <div class="stat-lbl">Fetched</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val val-purple" id="stat-rewritten">0</div>
+          <div class="stat-lbl">AI Rewritten</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val val-green" id="stat-published">0</div>
+          <div class="stat-lbl">Published</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val val-amber" id="stat-queue">0</div>
+          <div class="stat-lbl">In Queue</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div>
+      <div class="sec-head" style="display:flex;align-items:center;justify-content:space-between">
+        Activity Log
+        <button class="btn btn-ghost" style="padding:3px 8px;font-size:10px" onclick="clearLog()">Clear</button>
+      </div>
+      <div class="log-box" id="log-box">
+        <div class="log-entry"><span class="log-time">--:--</span><span class="log-msg-w">Pipeline ready. Add sources to begin.</span></div>
+      </div>
+    </div>
+
+    <!-- MANUAL CONTROLS -->
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-blue" style="flex:1;justify-content:center" onclick="fetchAllNow()">⟳ Fetch Now</button>
+      <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="clearQueue()">Clear Queue</button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL — QUEUE -->
+  <div class="panel-right">
+
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('queue',this)">
+        Queue <span class="tab-badge new" id="tab-queue-badge">0</span>
+      </div>
+      <div class="tab" onclick="switchTab('rewritten',this)">
+        AI Rewritten <span class="tab-badge" id="tab-rewritten-badge">0</span>
+      </div>
+      <div class="tab" onclick="switchTab('published',this)">
+        Published <span class="tab-badge" id="tab-published-badge">0</span>
+      </div>
+    </div>
+
+    <!-- QUEUE TAB -->
+    <div id="panel-queue">
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-amber" onclick="rewriteAll()">✦ AI Rewrite All</button>
+        <button class="btn btn-blue" onclick="publishAllReady()">↑ Publish All Ready</button>
+        <button class="btn btn-ghost" onclick="fetchAllNow()">⟳ Fetch Now</button>
+        <a href="index.html" class="btn btn-ghost" style="text-decoration:none;margin-left:auto">&#8592; News Site <span id="site-pending-count" style="color:var(--green);font-size:11px"></span></a>
+      </div>
+      <div id="queue-list">
+        <div class="empty">
+          <div class="empty-icon">📡</div>
+          <div class="empty-title">No articles yet</div>
+          <div>Add a target site URL and click "Fetch Now"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REWRITTEN TAB -->
+    <div id="panel-rewritten" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+        <button class="btn btn-green" onclick="publishAllReady()">↑ Publish All to Site</button>
+        <button class="btn btn-ghost" onclick="exportJSON()">↓ Export JSON</button>
+        <a href="index.html" class="btn btn-ghost" style="text-decoration:none;margin-left:auto">&#8592; View News Site</a>
+      </div>
+      <div id="rewritten-list">
+        <div class="empty">
+          <div class="empty-icon">🤖</div>
+          <div class="empty-title">No rewritten articles</div>
+          <div>Fetch articles then click "AI Rewrite All"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUBLISHED TAB -->
+    <div id="panel-published" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+        <button class="btn btn-blue" onclick="generateSitemap()">📄 Generate Sitemap (XML)</button>
+      </div>
+      <div id="published-list">
+        <div class="empty">
+          <div class="empty-icon">✓</div>
+          <div class="empty-title">Nothing published yet</div>
+          <div>Rewrite articles and publish them to your site</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Edit Before Publish</h3>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="label">Headline</div>
+        <input type="text" class="input" id="edit-title">
+      </div>
+      <div>
+        <div class="label">Excerpt</div>
+        <input type="text" class="input" id="edit-excerpt">
+      </div>
+      <div class="row2">
+        <div>
+          <div class="label">Category</div>
+          <select class="select" id="edit-cat">
+            <option>Pakistan</option><option>World</option><option>Business</option>
+            <option>Tech</option><option>Sports</option><option>Entertainment</option><option>Health</option>
+          </select>
+        </div>
+        <div>
+          <div class="label">Author</div>
+          <input type="text" class="input" id="edit-author" value="Admin">
+        </div>
+      </div>
+      <div>
+        <div class="label">Full Content</div>
+        <textarea class="content-area-edit" id="edit-content"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-green" onclick="saveEdit()">Save & Publish</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== STATE =====================
+let sources = [];
+let articles = [];
+let stats = {fetched:0, rewritten:0, published:0};
+let editingArticleId = null;
+let countdownInterval = null;
+let currentTab = 'queue';
+let currentProvider = 'anthropic';
+
+// CORS Proxies
+const PROXIES = [
+  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://cors-anywhere.herokuapp.com/${url}`
+];
+
+// ===================== PROVIDER CONFIG =====================
+const PROVIDERS = {
+  anthropic: {
+    name:'Anthropic Claude',
+    keyPrefix:'sk-ant',
+    keyPlaceholder:'sk-ant-api03-...',
+    keyLink:'https://console.anthropic.com/settings/keys',
+    models:[
+      {id:'claude-opus-4-5',     label:'Claude Opus 4.5',      tags:['smart','powerful'],  ctx:'200K'},
+      {id:'claude-sonnet-4-5',   label:'Claude Sonnet 4.5',    tags:['balanced','fast'],   ctx:'200K'},
+      {id:'claude-haiku-4-5-20251001', label:'Claude Haiku 4.5', tags:['fastest','cheap'], ctx:'200K'},
+      {id:'claude-sonnet-4-20250514', label:'Claude Sonnet 4',  tags:['stable'],            ctx:'200K'},
+      {id:'claude-opus-4-20250514',   label:'Claude Opus 4',    tags:['smart'],             ctx:'200K'},
+      {id:'claude-3-7-sonnet-20250219',label:'Claude 3.7 Sonnet',tags:['reasoning'],        ctx:'200K'},
+      {id:'claude-3-5-haiku-20241022', label:'Claude 3.5 Haiku', tags:['fast','cheap'],     ctx:'200K'},
+      {id:'claude-3-5-sonnet-20241022',label:'Claude 3.5 Sonnet',tags:['balanced'],         ctx:'200K'},
+      {id:'claude-3-opus-20240229',    label:'Claude 3 Opus',   tags:['smart'],             ctx:'200K'},
+    ],
+    call: callAnthropic
+  },
+  openai: {
+    name:'OpenAI GPT',
+    keyPrefix:'sk-',
+    keyPlaceholder:'sk-proj-...',
+    keyLink:'https://platform.openai.com/api-keys',
+    models:[
+      {id:'gpt-4o',              label:'GPT-4o',               tags:['smart','fast'],      ctx:'128K'},
+      {id:'gpt-4o-mini',         label:'GPT-4o Mini',          tags:['fast','cheap'],      ctx:'128K'},
+      {id:'gpt-4-turbo',         label:'GPT-4 Turbo',          tags:['smart'],             ctx:'128K'},
+      {id:'gpt-4',               label:'GPT-4',                tags:['powerful'],          ctx:'8K'},
+      {id:'gpt-3.5-turbo',       label:'GPT-3.5 Turbo',        tags:['cheap','fast'],      ctx:'16K'},
+      {id:'o1',                  label:'o1',                   tags:['reasoning'],         ctx:'200K'},
+      {id:'o1-mini',             label:'o1 Mini',              tags:['reasoning','fast'],  ctx:'128K'},
+      {id:'o3-mini',             label:'o3 Mini',              tags:['reasoning'],         ctx:'200K'},
+    ],
+    call: callOpenAI
+  },
+  gemini: {
+    name:'Google Gemini',
+    keyPrefix:'AIza',
+    keyPlaceholder:'AIzaSy...',
+    keyLink:'https://aistudio.google.com/app/apikey',
+    models:[
+      {id:'gemini-2.0-flash',        label:'Gemini 2.0 Flash',       tags:['fast','free'],  ctx:'1M'},
+      {id:'gemini-2.0-flash-lite',   label:'Gemini 2.0 Flash Lite',  tags:['fastest','free'],ctx:'1M'},
+      {id:'gemini-1.5-pro',          label:'Gemini 1.5 Pro',         tags:['smart'],        ctx:'2M'},
+      {id:'gemini-1.5-flash',        label:'Gemini 1.5 Flash',       tags:['fast','free'],  ctx:'1M'},
+      {id:'gemini-1.5-flash-8b',     label:'Gemini 1.5 Flash 8B',    tags:['fastest','free'],ctx:'1M'},
+      {id:'gemini-2.5-pro-preview',  label:'Gemini 2.5 Pro Preview', tags:['powerful'],     ctx:'2M'},
+    ],
+    call: callGemini
+  },
+  groq: {
+    name:'Groq',
+    keyPrefix:'gsk_',
+    keyPlaceholder:'gsk_...',
+    keyLink:'https://console.groq.com/keys',
+    models:[
+      {id:'llama-3.3-70b-versatile',    label:'LLaMA 3.3 70B',         tags:['smart','fast'],  ctx:'128K'},
+      {id:'llama-3.1-8b-instant',       label:'LLaMA 3.1 8B Instant',  tags:['fastest','free'],ctx:'128K'},
+      {id:'llama-3.2-90b-vision-preview',label:'LLaMA 3.2 90B',        tags:['powerful'],      ctx:'128K'},
+      {id:'llama-3.2-11b-vision-preview',label:'LLaMA 3.2 11B',        tags:['fast'],          ctx:'128K'},
+      {id:'mixtral-8x7b-32768',         label:'Mixtral 8x7B',          tags:['fast','free'],   ctx:'32K'},
+      {id:'gemma2-9b-it',               label:'Gemma 2 9B',            tags:['fast'],          ctx:'8K'},
+      {id:'qwen-qwq-32b',               label:'Qwen QwQ 32B',          tags:['reasoning'],     ctx:'128K'},
+      {id:'deepseek-r1-distill-llama-70b',label:'DeepSeek R1 70B',     tags:['reasoning'],     ctx:'128K'},
+    ],
+    call: callGroq
+  },
+  mistral: {
+    name:'Mistral AI',
+    keyPrefix:'',
+    keyPlaceholder:'your-mistral-api-key',
+    keyLink:'https://console.mistral.ai/api-keys/',
+    models:[
+      {id:'mistral-large-latest',   label:'Mistral Large',      tags:['smart'],       ctx:'128K'},
+      {id:'mistral-small-latest',   label:'Mistral Small',      tags:['fast','cheap'],ctx:'32K'},
+      {id:'open-mistral-nemo',      label:'Mistral Nemo',       tags:['fast','free'], ctx:'128K'},
+      {id:'codestral-latest',       label:'Codestral',          tags:['code'],        ctx:'32K'},
+      {id:'pixtral-large-latest',   label:'Pixtral Large',      tags:['vision'],      ctx:'128K'},
+      {id:'mistral-medium-latest',  label:'Mistral Medium',     tags:['balanced'],    ctx:'32K'},
+    ],
+    call: callMistral
+  },
+  cohere: {
+    name:'Cohere',
+    keyPrefix:'',
+    keyPlaceholder:'your-cohere-api-key',
+    keyLink:'https://dashboard.cohere.com/api-keys',
+    models:[
+      {id:'command-r-plus-08-2024', label:'Command R+ (Aug 2024)', tags:['smart'],       ctx:'128K'},
+      {id:'command-r-08-2024',      label:'Command R (Aug 2024)',  tags:['balanced'],    ctx:'128K'},
+      {id:'command-r-plus',         label:'Command R+',            tags:['powerful'],    ctx:'128K'},
+      {id:'command-r',              label:'Command R',             tags:['fast','free'], ctx:'128K'},
+      {id:'command-light',          label:'Command Light',         tags:['fastest'],     ctx:'4K'},
+    ],
+    call: callCohere
+  }
+};
+
+// ===================== PROVIDER UI =====================
+function selectProvider(p, el) {
+  currentProvider = p;
+  document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  populateModels(p);
+  updateApiKeyUI(p);
+  localStorage.setItem('nf_provider', p);
+}
+
+function populateModels(p) {
+  const sel = document.getElementById('model-select');
+  const cfg = PROVIDERS[p];
+  sel.innerHTML = cfg.models.map(m =>
+    `<option value="${m.id}">${m.label} — ${m.ctx} ctx${m.tags.includes('free')?'  🆓':''}</option>`
+  ).join('');
+  const saved = localStorage.getItem('nf_model_'+p);
+  if(saved) sel.value = saved;
+  sel.onchange = () => { localStorage.setItem('nf_model_'+p, sel.value); updateModelBadge(p); };
+  updateModelBadge(p);
+}
+
+function updateModelBadge(p) {
+  const cfg = PROVIDERS[p];
+  const sel = document.getElementById('model-select');
+  const model = cfg.models.find(m => m.id === sel.value) || cfg.models[0];
+  const badge = document.getElementById('model-info-badge');
+  const tagHtml = (model.tags||[]).map(t => `<span class="model-tag ${t==='fast'||t==='fastest'?'fast':t==='smart'||t==='powerful'?'smart':t==='free'?'free':''}">${t}</span>`).join('');
+  badge.innerHTML = `<span style="color:var(--text);font-weight:600;font-size:11px">${model.label}</span>${tagHtml}<span class="model-tag" style="margin-left:auto">${model.ctx}</span>`;
+}
+
+function updateApiKeyUI(p) {
+  const cfg = PROVIDERS[p];
+  const keyEl = document.getElementById('api-key');
+  keyEl.placeholder = cfg.keyPlaceholder;
+  document.getElementById('api-key-link').href = cfg.keyLink;
+  const saved = localStorage.getItem('nf_key_'+p);
+  keyEl.value = saved || '';
+  checkApiKeyValid();
+}
+
+function onApiKeyInput() {
+  const key = document.getElementById('api-key').value.trim();
+  localStorage.setItem('nf_key_'+currentProvider, key);
+  checkApiKeyValid();
+}
+
+function checkApiKeyValid() {
+  const key = document.getElementById('api-key').value.trim();
+  const notice = document.getElementById('api-notice');
+  const noticeText = document.getElementById('api-notice-text');
+  const cfg = PROVIDERS[currentProvider];
+  const valid = key.length > 8 && (cfg.keyPrefix === '' || key.startsWith(cfg.keyPrefix));
+  notice.classList.toggle('hidden', valid);
+  if(!valid) noticeText.textContent = `${cfg.name} key required. Get yours at the link below.`;
+}
+
+function getApiKey() { return document.getElementById('api-key').value.trim(); }
+function getSelectedModel() { return document.getElementById('model-select').value; }
+
+window.addEventListener('load', () => {
+  const savedProvider = localStorage.getItem('nf_provider') || 'anthropic';
+  currentProvider = savedProvider;
+  const tab = document.querySelector(`.provider-tab[data-p="${savedProvider}"]`);
+  if(tab){ document.querySelectorAll('.provider-tab').forEach(t=>t.classList.remove('active')); tab.classList.add('active'); }
+  populateModels(savedProvider);
+  updateApiKeyUI(savedProvider);
+  loadSavedSources();
+});
+
+// ===================== SOURCES =====================
+function addSource() {
+  const url = document.getElementById('new-url').value.trim();
+  const interval = parseInt(document.getElementById('new-interval').value);
+  const cat = document.getElementById('new-cat').value;
+  const style = document.getElementById('new-style').value;
+  const keywords = document.getElementById('new-keywords').value.trim();
+
+  if(!url || !url.startsWith('http')){ showToast('Please enter a valid URL (start with https://)'); return; }
+
+  const id = Date.now();
+  const source = { id, url, interval, cat, style, keywords, lastFetch: null, nextFetch: Date.now() + interval*60000 };
+  sources.push(source);
+  saveSources();
+  renderSources();
+  startCountdown();
+  showToast(`Source added: ${new URL(url).hostname}`, 'g');
+  log(`Source added: ${url}`, 'b');
+  document.getElementById('new-url').value = '';
+  document.getElementById('new-keywords').value = '';
+  document.getElementById('source-count').textContent = sources.length;
+}
+
+function removeSource(id) {
+  sources = sources.filter(s => s.id !== id);
+  saveSources();
+  renderSources();
+  document.getElementById('source-count').textContent = sources.length;
+  log('Source removed', 'a');
+}
+
+function renderSources() {
+  const el = document.getElementById('sources-list');
+  document.getElementById('sources-badge').textContent = sources.length;
+  if(!sources.length){ el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:12px;text-align:center">No sources added yet</div>'; return; }
+  el.innerHTML = sources.map(s => {
+    const host = (() => { try { return new URL(s.url).hostname; } catch(e){ return s.url.substring(0,30); }})();
+    const minsLeft = s.nextFetch ? Math.max(0, Math.round((s.nextFetch - Date.now())/60000)) : s.interval;
+    return `
+      <div class="source-item">
+        <div class="status-dot dot-green" title="Active"></div>
+        <div style="flex:1;min-width:0">
+          <div class="si-url">${host}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${s.cat} · ${s.style} ${s.keywords?'· '+s.keywords:''} · next: ${minsLeft}m</div>
+        </div>
+        <div class="si-interval">${s.interval}m</div>
+        <button class="si-del" onclick="removeSource(${s.id})">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function saveSources(){ localStorage.setItem('nf_sources', JSON.stringify(sources)); }
+function loadSavedSources(){
+  const s = localStorage.getItem('nf_sources');
+  if(s){ sources = JSON.parse(s); renderSources(); startCountdown(); document.getElementById('source-count').textContent = sources.length; }
+}
+
+// ===================== COUNTDOWN =====================
+function startCountdown() {
+  if(countdownInterval) clearInterval(countdownInterval);
+  if(!sources.length) return;
+  countdownInterval = setInterval(tickCountdown, 1000);
+  tickCountdown();
+}
+
+function tickCountdown() {
+  if(!sources.length){ document.getElementById('countdown-display').textContent='--:--'; return; }
+  // Find source with nearest next fetch
+  const now = Date.now();
+  let nearest = sources.reduce((a,b) => (a.nextFetch||0) < (b.nextFetch||0) ? a : b);
+  const msLeft = Math.max(0, (nearest.nextFetch||0) - now);
+  
+  if(msLeft <= 0) { triggerFetch(nearest); return; }
+
+  const mins = Math.floor(msLeft/60000);
+  const secs = Math.floor((msLeft%60000)/1000);
+  document.getElementById('countdown-display').textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  
+  const host = (() => { try { return new URL(nearest.url).hostname; } catch(e){ return 'source'; }})();
+  document.getElementById('countdown-source').textContent = `Next: ${host}`;
+  
+  const totalMs = nearest.interval * 60000;
+  const pct = ((totalMs - msLeft) / totalMs) * 100;
+  document.getElementById('countdown-bar').style.width = pct + '%';
+}
+
+async function triggerFetch(source) {
+  source.nextFetch = Date.now() + source.interval * 60000;
+  saveSources();
+  renderSources();
+  log(`Auto-fetch triggered: ${source.url}`, 'a');
+  await fetchSource(source);
+}
+
+// ===================== FETCH =====================
+async function fetchAllNow() {
+  if(!sources.length){ showToast('Add a source first!'); return; }
+  setPipelineStatus('FETCHING', 'amber');
+  for(const s of sources) { await fetchSource(s); }
+  setPipelineStatus('IDLE', 'green');
+}
+
+async function fetchSource(source) {
+  log(`Fetching: ${source.url}`, 'b');
+  
+  let html = null;
+  // Try CORS proxies
+  for(const proxy of PROXIES) {
+    try {
+      const proxyUrl = proxy(source.url);
+      const res = await fetch(proxyUrl, { timeout: 10000 });
+      if(!res.ok) continue;
+      const data = await res.json().catch(() => res.text());
+      html = typeof data === 'string' ? data : (data.contents || data.body || data.data || '');
+      if(html && html.length > 200) break;
+    } catch(e) { continue; }
+  }
+
+  if(!html || html.length < 200) {
+    // Fallback: generate demo articles from the URL for testing
+    log(`Could not reach ${source.url} — using demo content`, 'a');
+    html = generateDemoHTML(source.url, source.cat);
+  }
+
+  const parsed = parseArticles(html, source);
+  if(!parsed.length){ log('No new articles found', 'a'); return; }
+  
+  let added = 0;
+  
+  // Cross-check with local published posts to avoid duplicates
+  const sitePosts = JSON.parse(localStorage.getItem('nf_site_posts') || '[]');
+  const sharedPosts = JSON.parse(localStorage.getItem('nf_shared_published') || '[]');
+  
+  for(const article of parsed.slice(0, 8)) {
+    const origPart = article.origTitle.substring(0, 20).toLowerCase();
+    const isDup = articles.find(a => a.origTitle === article.origTitle) ||
+                  sitePosts.find(p => p.title.toLowerCase().includes(origPart)) ||
+                  sharedPosts.find(p => p.title.toLowerCase().includes(origPart));
+                  
+    if(!isDup) {
+      articles.push(article);
+      added++;
+      stats.fetched++;
+    }
+  }
+  
+  log(`${added} new articles added to queue`, 'g');
+  updateStats();
+  renderQueueList();
+  renderTabBadges();
+  if(added > 0) showToast(`${added} new articles fetched!`, 'g');
+}
+
+function generateDemoHTML(url, cat) {
+  const host = (() => { try{ return new URL(url).hostname; }catch(e){ return url; }})();
+  const headlines = {
+    Pakistan: ["PM Announces New Economic Package for Small Businesses","Punjab Govt Launches Free Healthcare Initiative","Pakistan Ranks Higher in Global Education Index","New Agricultural Policy Boosts Wheat Production","Lahore Introduces Smart Traffic Management System"],
+    World: ["UN Security Council Meets Over Regional Tensions","G20 Leaders Agree on Climate Finance Deal","Global Trade Volumes Recover to Pre-Crisis Levels","WHO Reports Progress on Disease Eradication","Space Agency Announces Lunar Mission Plans"],
+    Business: ["Oil Prices Stabilize After OPEC Meeting","Tech Giants Report Strong Q1 Earnings","Central Bank Holds Interest Rates Steady","E-Commerce Growth Continues at Record Pace","Stock Markets Rally on Positive Economic Data"],
+    Tech: ["New AI Model Breaks Performance Records","Cybersecurity Threats Rise in Financial Sector","Quantum Computing Milestone Achieved","5G Rollout Accelerates Across Developing Nations","Renewable Energy Tech Sees Investment Surge"],
+    Sports: ["National Team Wins Regional Championship","Record Attendance at Sports Tournament","Young Athlete Breaks World Record","League Season Kicks Off with Exciting Fixtures","Sports Ministry Announces New Training Centers"],
+    Entertainment: ["New Film Festival Announced in Karachi","Music Industry Reports Revenue Growth","Streaming Platform Adds Local Content","Award Show Celebrates Pakistani Talent","Drama Serial Breaks Viewership Records"],
+    Health: ["New Vaccine Shows 95% Efficacy in Trials","Mental Health Awareness Campaign Launched","Hospital Network Expands to Rural Areas","Health Ministry Reduces Medicine Prices","Research Links Diet to Cognitive Health"]
+  };
+  const items = (headlines[cat]||headlines.Pakistan).map((h,i) => 
+    `<article><h2><a href="${url}/article-${i+1}">${h}</a></h2><p>Detailed report on ${h.toLowerCase()}. Experts weigh in on the implications for policy and public life. Read full coverage for analysis and expert opinions.</p></article>`
+  ).join('');
+  return `<html><body>${items}</body></html>`;
+}
+
+function parseArticles(html, source) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const results = [];
+
+  // Extract headings + paragraphs
+  const headings = [...doc.querySelectorAll('h1,h2,h3,h4')];
+  
+  for(const h of headings) {
+    const title = h.textContent.trim().replace(/\s+/g,' ');
+    if(title.length < 15 || title.length > 300) continue;
+    
+    // Get nearest paragraph
+    let body = '';
+    let next = h.nextElementSibling;
+    for(let i=0;i<5&&next;i++){ if(next.tagName==='P'){ body += ' ' + next.textContent.trim(); } next=next.nextElementSibling; }
+    
+    if(!body){ const p=h.closest('article,section,div')?.querySelector('p'); body=p?.textContent.trim()||''; }
+    body = body.substring(0, 800).trim().replace(/\s+/g,' ');
+    if(body.length < 30) continue;
+
+    results.push({
+      id: Date.now() + Math.random(),
+      source: (()=>{ try{return new URL(source.url).hostname;}catch(e){return source.url;}})(),
+      sourceUrl: source.url, cat: source.cat, style: source.style, keywords: source.keywords,
+      origTitle: title, origBody: body,
+      newTitle: '', newContent: '', excerpt: '', image: '',
+      status: 'new', fetchedAt: new Date().toLocaleTimeString()
+    });
+  }
+
+  // Also try <article> tags directly
+  if(results.length === 0) {
+    const articles_el = doc.querySelectorAll('article,div[class*="article"],div[class*="story"],div[class*="news"]');
+    for(const art of articles_el) {
+      const h = art.querySelector('h1,h2,h3,a');
+      const p = art.querySelector('p');
+      if(h && p) {
+        const title = h.textContent.trim().replace(/\s+/g,' ');
+        if(title.length < 15) continue;
+        results.push({
+          id: Date.now() + Math.random(),
+          source: (()=>{ try{return new URL(source.url).hostname;}catch(e){return source.url;}})(),
+          sourceUrl: source.url, cat: source.cat, style: source.style, keywords: source.keywords,
+          origTitle: title, origBody: p.textContent.trim().substring(0,600),
+          newTitle:'', newContent:'', excerpt:'', image: '',
+          status:'new', fetchedAt: new Date().toLocaleTimeString()
+        });
+      }
+    }
+  }
+
+  return results.slice(0, 10);
+}
+
+// ===================== AI REWRITE =====================
+async function rewriteAll() {
+  const apiKey = getApiKey();
+  if(!apiKey || apiKey.length < 8){ showToast('Add your API key first!'); return; }
+  const toRewrite = articles.filter(a => a.status === 'new');
+  if(!toRewrite.length){ showToast('No new articles to rewrite', 'a'); return; }
+  setPipelineStatus('REWRITING', 'amber');
+  log(`Starting AI rewrite [${PROVIDERS[currentProvider].name} · ${getSelectedModel()}] — ${toRewrite.length} articles`, 'a');
+  for(const article of toRewrite) {
+    article.status = 'rewriting';
+    renderQueueList();
+    await rewriteArticle(article, apiKey);
+    await sleep(600);
+  }
+  setPipelineStatus('IDLE', 'green');
+  renderQueueList(); renderRewrittenList(); renderTabBadges(); updateStats();
+  showToast(`Rewriting complete!`, 'g');
+}
+
+async function rewriteSingle(id) {
+  const apiKey = getApiKey();
+  if(!apiKey || apiKey.length < 8){ showToast('Add your API key first!'); return; }
+  const article = articles.find(a => a.id === id);
+  if(!article) return;
+  article.status = 'rewriting';
+  renderQueueList();
+  await rewriteArticle(article, apiKey);
+  renderQueueList(); renderRewrittenList(); renderTabBadges(); updateStats();
+}
+
+async function rewriteArticle(article, apiKey) {
+  const keywords = article.keywords ? ` Use these keywords naturally: ${article.keywords}.` : '';
+  const baseReqs = `CRITICAL: You MUST provide an original analysis paragraph. You MUST mention the original source domain (${article.source}). Include an engaging Unsplash image URL related to the topic.`;
+  const stylePrompts = {
+    rewrite: `Rewrite this news article completely in your own words in English. Create a new headline, a 2-sentence excerpt, and a full article (3-4 paragraphs). Make it fresh, engaging, and original while keeping all key facts.${keywords}\n\nOriginal headline: ${article.origTitle}\nOriginal content: ${article.origBody}`,
+    urdu:    `یہ خبر اردو میں لکھیں۔ نیا سرخی، 2 جملوں کا خلاصہ، اور مکمل خبر (3 پیراگراف) لکھیں۔ اصل حقائق برقرار رکھیں لیکن اپنے الفاظ میں لکھیں۔${keywords}\n\nOriginal: ${article.origTitle}\nContent: ${article.origBody}`,
+    expand:  `Expand this news article with analysis, background context, and expert perspectives. Write a new headline, excerpt, and 5-6 paragraph article.${keywords}\n\nOriginal: ${article.origTitle}\nContent: ${article.origBody}`,
+    short:   `Summarize this news in a concise format. Write a punchy headline, one sentence excerpt, and 2 short paragraphs with only the essential facts.${keywords}\n\nOriginal: ${article.origTitle}\nContent: ${article.origBody}`,
+    seo:     `Rewrite this as an SEO-optimized news article. Include the main keyword naturally in headline and first paragraph. Write headline, meta description (excerpt), and 4-paragraph article.${keywords}\n\nOriginal: ${article.origTitle}\nContent: ${article.origBody}`,
+    formal:  `Rewrite this in formal journalistic AP style. Write a formal headline, formal lead sentence, and 3-4 paragraph news article following inverted pyramid structure.${keywords}\n\nOriginal: ${article.origTitle}\nContent: ${article.origBody}`
+  };
+  const prompt = baseReqs + '\n\n' + (stylePrompts[article.style] || stylePrompts.rewrite) +
+    '\n\nRespond ONLY in this exact JSON format (no extra text markdown):\n{"headline":"...","excerpt":"...","content":"paragraphs separated by \\n\\n","image":"https://images.unsplash.com/photo-..."}';
+
+  try {
+    const cfg = PROVIDERS[currentProvider];
+    const result = await cfg.call(apiKey, getSelectedModel(), prompt);
+    applyRewriteResult(article, result);
+  } catch(e) {
+    article.status = 'new';
+    log(`✕ ${PROVIDERS[currentProvider].name} error: ${e.message}`, 'r');
+    showToast(`Error: ${e.message.substring(0,80)}`);
+  }
+}
+
+function applyRewriteResult(article, text) {
+  let parsed = null;
+  try { const m = text.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : null; } catch(e){}
+  if(parsed && parsed.headline) {
+    article.newTitle = parsed.headline;
+    article.excerpt  = parsed.excerpt || '';
+    article.newContent = parsed.content || '';
+    article.image   = parsed.image || '';
+  } else {
+    const lines = text.split('\n').filter(l=>l.trim());
+    article.newTitle   = lines[0]?.replace(/^[#*"'`]+/,'').replace(/[#*"'`]+$/,'').trim() || article.origTitle;
+    article.excerpt    = lines[1]?.trim() || article.origBody.substring(0,150)+'...';
+    article.newContent = lines.slice(2).join('\n\n') || article.origBody;
+    article.image      = '';
+  }
+  article.status = 'ready';
+  article.modelUsed = `${PROVIDERS[currentProvider].name} · ${getSelectedModel()}`;
+  stats.rewritten++;
+  log(`✓ [${currentProvider}] ${article.newTitle.substring(0,50)}...`, 'g');
+}
+
+// ===================== PROVIDER API CALLS =====================
+async function callAnthropic(apiKey, model, prompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
+    body:JSON.stringify({model, max_tokens:1000, messages:[{role:'user',content:prompt}]})
+  });
+  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`HTTP ${res.status}`); }
+  const d = await res.json();
+  return d.content?.[0]?.text || '';
+}
+
+async function callOpenAI(apiKey, model, prompt) {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+    body:JSON.stringify({model, max_tokens:1000, messages:[{role:'user',content:prompt}]})
+  });
+  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`HTTP ${res.status}`); }
+  const d = await res.json();
+  return d.choices?.[0]?.message?.content || '';
+}
+
+async function callGemini(apiKey, model, prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1000}})
+  });
+  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`HTTP ${res.status}`); }
+  const d = await res.json();
+  return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+async function callGroq(apiKey, model, prompt) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+    body:JSON.stringify({model, max_tokens:1000, messages:[{role:'user',content:prompt}]})
+  });
+  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`HTTP ${res.status}`); }
+  const d = await res.json();
+  return d.choices?.[0]?.message?.content || '';
+}
+
+async function callMistral(apiKey, model, prompt) {
+  const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+    body:JSON.stringify({model, max_tokens:1000, messages:[{role:'user',content:prompt}]})
+  });
+  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`HTTP ${res.status}`); }
+  const d = await res.json();
+  return d.choices?.[0]?.message?.content || '';
+}
+
+async function callCohere(apiKey, model, prompt) {
+  const res = await fetch('https://api.cohere.ai/v1/chat', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+    body:JSON.stringify({model, message:prompt, max_tokens:1000})
+  });
+  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.message||`HTTP ${res.status}`); }
+  const d = await res.json();
+  return d.text || '';
+}
+
+// ===================== SHARED STORAGE KEY (same as index.html) =====================
+const SHARED_KEY = 'nf_shared_published';
+
+function getSharedPosts() {
+  try { return JSON.parse(localStorage.getItem(SHARED_KEY) || '[]'); } catch(e){ return []; }
+}
+
+function saveToSharedStorage(article) {
+  const shared = getSharedPosts();
+  const postData = {
+    id: article.id,
+    title: article.newTitle || article.origTitle,
+    headline: article.newTitle || article.origTitle,
+    excerpt: article.excerpt || '',
+    content: article.newContent || article.origBody,
+    cat: article.cat,
+    author: 'Admin',
+    source: article.source,
+    image: article.image || '',
+    keywords: article.keywords || '',
+    modelUsed: article.modelUsed || '',
+    publishedAt: article.publishedAt,
+    _imported: false
+  };
+  // Avoid duplicates
+  const idx = shared.findIndex(p => p.id === article.id);
+  if(idx >= 0) shared[idx] = postData; else shared.push(postData);
+  try { localStorage.setItem(SHARED_KEY, JSON.stringify(shared)); } catch(e){}
+}
+
+function getUnimportedCount() {
+  return getSharedPosts().filter(p => !p._imported).length;
+}
+
+function updateSiteCounter() {
+  const count = getUnimportedCount();
+  const el = document.getElementById('site-pending-count');
+  if(el) el.textContent = count > 0 ? ` (${count} pending)` : '';
+}
+
+// ===================== PUBLISH =====================
+function publishAllReady() {
+  const ready = articles.filter(a => a.status === 'ready');
+  if(!ready.length){ showToast('No ready articles to publish', 'a'); return; }
+  
+  if(!confirm('🚨 AI Google Penalty Risk 🚨\n\nAre you sure you want to publish ' + ready.length + ' auto-generated articles without human editorial review? Google may flag this as thin AI content.\n\nPress OK to publish anyway, or Cancel to review them first.')) return;
+
+  ready.forEach(a => publishArticle(a.id, true));
+  const count = ready.length;
+  updateSiteCounter();
+  showToast(`${count} article${count>1?'s':''} published → Firebase + Site!`, 'g');
+  log(`${count} articles → Firebase + localStorage`, 'g');
+}
+
+function publishArticle(id, silent=false) {
+  const article = articles.find(a => a.id === id);
+  if(!article) return;
+  
+  if(!silent && !confirm('🚨 AI Google Penalty Risk 🚨\n\nDid you review this article? Publishing unedited AI content risks SEO penalties. Proceed?')) return;
+
+  article.status = 'published';
+  article.publishedAt = new Date().toLocaleTimeString();
+  stats.published++;
+
+  // Post data — site کے لیے ready format
+  const postData = {
+    id:        article.id,
+    title:     article.newTitle || article.origTitle,
+    excerpt:   article.excerpt || '',
+    content:   (article.newContent || article.origBody).split('\n\n').slice(0, Math.ceil((article.newContent||article.origBody).split('\n\n').length/2)).join('\n\n'),
+    content2:  (article.newContent || article.origBody).split('\n\n').slice(Math.ceil((article.newContent||article.origBody).split('\n\n').length/2)).join('\n\n'),
+    cat:       article.cat,
+    author:    'Admin',
+    date:      new Date().toLocaleDateString('ur-PK',{day:'numeric',month:'long',year:'numeric'}),
+    image:     article.image || '',
+    status:    'published',
+    fromPipeline: true,
+    modelUsed: article.modelUsed || '',
+    updatedAt: Date.now()
+  };
+
+  // ★ 1. Firebase میں save کریں (online database)
+  if (window.fbSavePost) {
+    fbSavePost(postData)
+      .then(r => {
+        if(r.ok) log(`✅ Firebase: ${postData.title.substring(0,40)}`, 'g');
+        else log(`⚠ Firebase fallback used`, 'a');
+      })
+      .catch(e => log(`✕ Firebase error: ${e.message}`, 'r'));
+  }
+
+  // ★ 2. localStorage shared storage (backup + same-browser sync)
+  saveToSharedStorage(article);
+
+  updateStats();
+  renderQueueList();
+  renderRewrittenList();
+  renderPublishedList();
+  renderTabBadges();
+  updateSiteCounter();
+
+  if(!silent){
+    showToast('Published → Firebase + Site!', 'g');
+    log(`Published: ${postData.title.substring(0,50)}`, 'g');
+  }
+}
+
+function openEditModal(id) {
+  const a = articles.find(x => x.id === id);
+  if(!a) return;
+  editingArticleId = id;
+  document.getElementById('edit-title').value = a.newTitle || a.origTitle;
+  document.getElementById('edit-excerpt').value = a.excerpt || '';
+  document.getElementById('edit-content').value = a.newContent || a.origBody;
+  document.getElementById('edit-cat').value = a.cat;
+  document.getElementById('edit-author').value = 'Admin';
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editingArticleId = null;
+}
+
+function saveEdit() {
+  if(!editingArticleId) return;
+  const a = articles.find(x => x.id === editingArticleId);
+  if(!a) return;
+  a.newTitle = document.getElementById('edit-title').value;
+  a.excerpt = document.getElementById('edit-excerpt').value;
+  a.newContent = document.getElementById('edit-content').value;
+  a.cat = document.getElementById('edit-cat').value;
+  a.status = 'ready';
+  closeEditModal();
+  publishArticle(editingArticleId);
+  showToast('Saved and published!', 'g');
+}
+
+function deleteArticle(id) {
+  articles = articles.filter(a => a.id !== id);
+  renderQueueList(); renderRewrittenList(); renderPublishedList(); renderTabBadges(); updateStats();
+}
+
+// ===================== RENDER FUNCTIONS =====================
+function renderQueueList() {
+  const list = document.getElementById('queue-list');
+  const items = articles.filter(a => a.status !== 'published');
+  if(!items.length){ list.innerHTML = '<div class="empty"><div class="empty-icon">📡</div><div class="empty-title">No articles yet</div><div>Add a target site URL and click "Fetch Now"</div></div>'; return; }
+  list.innerHTML = items.map(a => articleCardHTML(a)).join('');
+}
+
+function renderRewrittenList() {
+  const list = document.getElementById('rewritten-list');
+  const items = articles.filter(a => a.status === 'ready' || a.status === 'published');
+  if(!items.length){ list.innerHTML = '<div class="empty"><div class="empty-icon">🤖</div><div class="empty-title">No rewritten articles</div><div>Fetch articles then click "AI Rewrite All"</div></div>'; return; }
+  list.innerHTML = items.map(a => articleCardHTML(a)).join('');
+}
+
+function renderPublishedList() {
+  const list = document.getElementById('published-list');
+  const items = articles.filter(a => a.status === 'published');
+  if(!items.length){ list.innerHTML = '<div class="empty"><div class="empty-icon">✓</div><div class="empty-title">Nothing published yet</div></div>'; return; }
+  list.innerHTML = items.map(a => articleCardHTML(a)).join('');
+}
+
+function articleCardHTML(a) {
+  const badgeMap = {new:'badge-new',rewriting:'badge-rewriting',ready:'badge-ready',published:'badge-published'};
+  const badgeLabelMap = {new:'NEW',rewriting:'REWRITING...',ready:'READY',published:'PUBLISHED'};
+  
+  return `
+    <div class="article-card" id="card-${a.id}">
+      <div class="ac-source">
+        <span>${a.source}</span>
+        <span class="ac-badge ${badgeMap[a.status]||'badge-new'}">${badgeLabelMap[a.status]||a.status.toUpperCase()}</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--muted)">${a.fetchedAt}</span>
+      </div>
+      ${a.status==='rewriting' ? `<div class="ai-indicator"><div class="ai-dots"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div> AI rewriting...</div>` : ''}
+      ${a.origTitle ? `<div class="ac-title-orig">Original: ${a.origTitle.substring(0,100)}</div>` : ''}
+      ${a.newTitle ? `<div class="ac-title-new">${a.newTitle}</div>` : ''}
+      ${a.excerpt ? `<div class="ac-excerpt">${a.excerpt}</div>` : ''}
+      ${(a.newContent||a.origBody) ? `<div class="ac-content-preview">${(a.newContent||a.origBody).substring(0,300)}...</div>` : ''}
+      <div class="ac-meta">
+        <span class="ac-tag">${a.cat}</span>
+        <span class="ac-tag">${a.style}</span>
+        ${a.modelUsed ? `<span class="ac-tag" style="color:var(--purple);border-color:var(--purple)">🤖 ${a.modelUsed}</span>` : ''}
+        ${a.publishedAt ? `<span class="ac-tag" style="color:var(--green);border-color:var(--green)">Published ${a.publishedAt}</span>` : ''}
+      </div>
+      <div class="ac-actions">
+        ${a.status==='new' ? `<button class="btn btn-amber" onclick="rewriteSingle(${a.id})">✦ AI Rewrite</button>` : ''}
+        ${a.status==='ready' ? `<button class="btn btn-green" onclick="publishArticle(${a.id})">↑ Publish</button>` : ''}
+        ${(a.status==='new'||a.status==='ready') ? `<button class="btn btn-blue" onclick="openEditModal(${a.id})">✎ Edit & Publish</button>` : ''}
+        ${a.status==='ready' ? `<button class="btn btn-ghost" onclick="copyArticle(${a.id})">⧉ Copy JSON</button>` : ''}
+        <button class="btn btn-ghost" onclick="deleteArticle(${a.id})" style="margin-left:auto">✕</button>
+      </div>
+    </div>`;
+}
+
+function copyArticle(id) {
+  const a = articles.find(x=>x.id===id);
+  if(!a) return;
+  const data = {title:a.newTitle||a.origTitle,excerpt:a.excerpt,content:a.newContent||a.origBody,cat:a.cat,author:'Admin'};
+  navigator.clipboard?.writeText(JSON.stringify(data, null, 2)).then(()=>showToast('Copied to clipboard!','g')).catch(()=>showToast('Copy failed'));
+}
+
+function renderTabBadges() {
+  const q = articles.filter(a=>a.status!=='published').length;
+  const r = articles.filter(a=>a.status==='ready').length;
+  const p = articles.filter(a=>a.status==='published').length;
+  document.getElementById('tab-queue-badge').textContent = q;
+  document.getElementById('tab-rewritten-badge').textContent = r;
+  document.getElementById('tab-published-badge').textContent = p;
+  document.getElementById('tab-queue-badge').className = 'tab-badge' + (q>0?' new':'');
+}
+
+function switchTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-queue').style.display = tab==='queue'?'block':'none';
+  document.getElementById('panel-rewritten').style.display = tab==='rewritten'?'block':'none';
+  document.getElementById('panel-published').style.display = tab==='published'?'block':'none';
+  if(tab==='rewritten') renderRewrittenList();
+  if(tab==='published') renderPublishedList();
+}
+
+// ===================== UTILS =====================
+function updateStats() {
+  document.getElementById('stat-fetched').textContent = stats.fetched;
+  document.getElementById('stat-rewritten').textContent = stats.rewritten;
+  document.getElementById('stat-published').textContent = stats.published;
+  document.getElementById('stat-queue').textContent = articles.filter(a=>a.status==='new'||a.status==='ready').length;
+}
+
+function setPipelineStatus(text, color) {
+  document.getElementById('pipeline-status').textContent = text;
+  const dot = document.getElementById('pipeline-dot');
+  dot.className = 'status-dot dot-' + color;
+}
+
+function clearQueue() { articles=[]; renderQueueList(); renderTabBadges(); updateStats(); showToast('Queue cleared','a'); }
+function clearLog() { document.getElementById('log-box').innerHTML=''; }
+function exportJSON() {
+  const data = articles.filter(a=>a.status==='ready'||a.status==='published');
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'newsflow-articles.json';
+  a.click();
+  showToast('JSON exported!','g');
+}
+
+function log(msg, type='w') {
+  const box = document.getElementById('log-box');
+  const time = new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const typeClass = {g:'log-msg-g',r:'log-msg-r',a:'log-msg-a',b:'log-msg-b',w:'log-msg-w'}[type]||'log-msg-w';
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">${time}</span><span class="${typeClass}">${msg}</span>`;
+  box.insertBefore(entry, box.firstChild);
+  if(box.children.length > 50) box.removeChild(box.lastChild);
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  const colors = {g:'var(--green)',r:'var(--red)',a:'var(--amber)',b:'var(--blue)'};
+  t.textContent = msg;
+  t.style.borderColor = colors[type] || 'var(--border2)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+// Close modal on overlay click
+document.getElementById('edit-modal').addEventListener('click', function(e){ if(e.target===this) closeEditModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeEditModal(); });
+
+// ===================== INIT =====================
+renderQueueList();
+renderTabBadges();
+updateStats();
+updateSiteCounter();
+log('Pipeline ready — ' + PROVIDERS[currentProvider].name + ' selected', 'b');
+</script>
+
+<!-- PIPELINE FOOTER -->
+<div style="background:var(--surface);border-top:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:20px;font-family:var(--font);font-size:11px;color:var(--muted)">
+  <span>NewsFlow Pipeline v3.0</span>
+  <span>·</span>
+  <a href="index.html" style="color:var(--blue);text-decoration:none">&#8592; News Site (index.html)</a>
+  <span>·</span>
+  <span id="footer-shared-count">Shared queue: <span style="color:var(--green)">0</span> pending</span>
+  <span>·</span>
+  <span id="footer-fb-status" style="color:var(--amber)">🔥 Firebase: Loading...</span>
+  <span style="margin-left:auto;font-family:var(--mono);font-size:10px" id="footer-provider-label"></span>
+</div>
+
+<script>
+// ===================== SITEMAP =====================
+function generateSitemap() {
+  const sitePosts = JSON.parse(localStorage.getItem('nf_site_posts') || '[]');
+  const sharedPosts = JSON.parse(localStorage.getItem('nf_shared_published') || '[]');
+  
+  // merge unique
+  const all = [...sitePosts, ...sharedPosts].filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i);
+  if (!all.length) { showToast('No published posts found to generate sitemap', 'a'); return; }
+  
+  const domain = 'https://newsflow.digital';
+  const urls = all.map(p => `  <url>
+    <loc>${domain}/?post=${encodeURIComponent(p.slug || p.id)}</loc>
+    <lastmod>${new Date(p.updatedAt || p.id || Date.now()).toISOString()}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>`).join('\n');
+
+  const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${domain}/</loc>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>
+${urls}
+</urlset>`;
+
+  const blob = new Blob([sitemapXml], {type: "application/xml"});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = "sitemap.xml";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('sitemap.xml Generated!', 'g');
+}
+
+// Footer live update
+function updateFooter(){
+  const c = getUnimportedCount();
+  const el = document.getElementById('footer-shared-count');
+  if(el) el.innerHTML = `Shared queue: <span style="color:${c>0?'var(--green)':'var(--muted)'}">${c} pending</span>`;
+  const pl = document.getElementById('footer-provider-label');
+  if(pl) pl.textContent = PROVIDERS[currentProvider].name + ' · ' + getSelectedModel();
+  // Firebase status
+  const fb = document.getElementById('footer-fb-status');
+  if(fb && window.fbStatus) {
+    const s = fbStatus();
+    fb.textContent = s.ready ? '🔥 Firebase: Connected' : (s.config ? '🔥 Firebase: Connecting...' : '⚠ firebase.js config ڈالیں');
+    fb.style.color = s.ready ? 'var(--green)' : 'var(--amber)';
+  }
+}
+setInterval(updateFooter, 2000);
+updateFooter();
+</script>
+
+<!-- ★ Firebase Integration -->
+<script src="firebase.js"></script>
+</body>
+</html>

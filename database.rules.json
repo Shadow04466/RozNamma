@@ -1,0 +1,12 @@
+{
+  "rules": {
+    ".read": true,
+    "posts": {
+      ".read": true,
+      "$post_id": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['title', 'content', 'cat']) && newData.child('title').isString() && newData.child('content').isString() && newData.child('cat').isString() && newData.child('title').val().length > 5"
+      }
+    }
+  }
+}

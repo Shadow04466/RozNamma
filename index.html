@@ -2,7 +2,7 @@
 <html lang="ur" dir="ltr">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>روزنامہ ڈیجیٹل — Pakistan's Digital Newsroom</title>
 <meta name="description" content="Pakistan's finest digital newsroom providing the latest news on tech, business, world, and sports.">
@@ -440,9 +440,19 @@ footer{background:var(--nav-bg);color:#888;padding:40px 0 24px}
       </div>
 
       <div class="form-group">
-        <label class="form-label">Cover Image URL</label>
-        <input type="url" class="form-input" id="p-image" placeholder="https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=1200&h=630&fit=crop">
-        <div style="font-size:11px;color:var(--muted);margin-top:5px">If left blank, a placeholder image based on category will be used.</div>
+        <label class="form-label">Cover Image</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <label style="background:var(--ink);color:#fff;font-family:var(--font-ui);font-size:11px;font-weight:700;padding:8px 16px;cursor:pointer;letter-spacing:.06em;white-space:nowrap">
+            📁 Upload Image
+            <input type="file" id="p-image-file" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+          </label>
+          <span style="font-family:var(--font-ui);font-size:11px;color:var(--muted)">— ya URL paste karo —</span>
+        </div>
+        <input type="url" class="form-input" id="p-image" placeholder="https://images.unsplash.com/photo-...">
+        <div id="p-image-preview" style="display:none;margin-top:8px">
+          <img id="p-image-thumb" src="" style="width:100%;height:160px;object-fit:cover;border:1px solid var(--border)" alt="preview">
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px">Khali chhoro to category ki default image use hogi.</div>
       </div>
 
       <div class="form-group">
@@ -843,6 +853,8 @@ function openModal(id=null) {
     document.getElementById('p-excerpt').value='';
     document.getElementById('p-content').value='';
     document.getElementById('p-image').value='';
+    document.getElementById('p-image-preview').style.display='none';
+    document.getElementById('p-image-file').value='';
     document.getElementById('p-author').value='Admin';
     document.getElementById('p-cat').value='Pakistan';
     btn.textContent = 'Publish Now';
@@ -910,6 +922,36 @@ function savePost(mode) {
 }
 
 function editPost(id) { openModal(id); }
+
+// ===== IMAGE UPLOAD & PREVIEW =====
+function handleImageUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    document.getElementById('p-image').value = dataUrl;
+    document.getElementById('p-image-thumb').src = dataUrl;
+    document.getElementById('p-image-preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+// Live preview when URL is typed
+document.addEventListener('DOMContentLoaded', function() {
+  const imgInput = document.getElementById('p-image');
+  if (imgInput) {
+    imgInput.addEventListener('input', function() {
+      const url = this.value.trim();
+      if (url.startsWith('http')) {
+        document.getElementById('p-image-thumb').src = url;
+        document.getElementById('p-image-preview').style.display = 'block';
+      } else {
+        document.getElementById('p-image-preview').style.display = 'none';
+      }
+    });
+  }
+});
 
 function deletePost(id) {
   if(!confirm('Delete this post permanently?')) return false;
@@ -1000,7 +1042,7 @@ function importFromPipeline() {
       cat: p.cat || 'World',
       author: p.author || 'Admin',
       date: dateStr,
-      image: p.image || generatePlaceholderImage(p.cat),
+      image: (p.image && p.image.startsWith('https://images.unsplash.com/photo-')) ? p.image : generatePlaceholderImage(p.cat),
       status: 'published',
       fromPipeline: true,
       modelUsed: p.modelUsed || '',

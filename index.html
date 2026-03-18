@@ -250,7 +250,7 @@ footer{background:var(--nav-bg);color:#888;padding:40px 0 24px}
         <button class="btn-write auth-only" id="btn-write-nav" onclick="openModal()" style="display:none">+ New Post</button>
         <button class="btn-search auth-only" id="btn-backup-nav" onclick="exportBackup()" style="display:none;background:var(--blue);margin-left:8px;color:#fff;border-color:var(--blue)">💾 Backup</button>
         <button class="btn-search" id="btn-auth" onclick="toggleAuth()" style="margin-left:8px">Admin Login</button>
-        <button class="btn-pipeline" onclick="window.location.href='pipeline.html'" title="Auto Content Pipeline" style="margin-left:8px">&#9656; Pipeline <span id="pipeline-badge" style="display:none;background:#fff;color:var(--red);font-size:10px;font-weight:700;padding:1px 5px;margin-left:2px;border-radius:2px">0</span></button>
+        <button class="btn-pipeline" id="btn-pipeline-nav" onclick="window.location.href='pipeline.html'" title="Auto Content Pipeline" style="display:none;margin-left:8px">&#9656; Pipeline <span id="pipeline-badge" style="display:none;background:#fff;color:var(--red);font-size:10px;font-weight:700;padding:1px 5px;margin-left:2px;border-radius:2px">0</span></button>
       </div>
     </div>
   </div>
@@ -267,7 +267,7 @@ footer{background:var(--nav-bg);color:#888;padding:40px 0 24px}
     <a class="nav-link" onclick="filterCat('Sports')">Sports</a>
     <a class="nav-link" onclick="filterCat('Entertainment')">Entertainment</a>
     <a class="nav-link" onclick="filterCat('Health')">Health</a>
-    <a class="nav-link" href="pipeline.html" style="margin-left:auto;color:var(--red);border-bottom-color:transparent" id="nav-pipeline-link">&#9656; Pipeline <span id="nav-pipeline-count" style="display:none;background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:2px;margin-left:3px">0</span></a>
+    <a class="nav-link" href="pipeline.html" style="margin-left:auto;color:var(--red);border-bottom-color:transparent" id="nav-pipeline-link" style="display:none">id="nav-pipeline-link">&#9656; Pipeline#9656; Pipeline <span id="nav-pipeline-count" style="display:none;background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:2px;margin-left:3px">0</span></a>
     <a class="nav-link" href="guide.html" style="color:#888">📋 Guide</a>
   </div>
 </nav>
@@ -1047,6 +1047,8 @@ function toggleAuth() {
 }
 
 function updateAuthUI() {
+  document.getElementById('btn-pipeline-nav').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('nav-pipeline-link').style.display = isAdmin ? 'inline-block' : 'none';
   document.getElementById('btn-auth').textContent = isAdmin ? 'Logout' : 'Admin Login';
   document.getElementById('btn-write-nav').style.display = isAdmin ? 'inline-block' : 'none';
   document.querySelectorAll('.auth-only').forEach(el => el.style.display = isAdmin ? 'flex' : 'none');

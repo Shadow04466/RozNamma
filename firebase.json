@@ -1,5 +1,5 @@
 // ================= FIREBASE CONFIG =================
-const FIREBASE_CONFIG = {
+  const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBC7i8kUc8VcrjfHzEmbp3B64RkVerrtiw",
   authDomain: "newsflow-cms-bf52b.firebaseapp.com",
   databaseURL: "https://newsflow-cms-bf52b-default-rtdb.firebaseio.com",

@@ -489,6 +489,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         </div>
       </div>
       <div>
+        <div class="label">Cover Image URL</div>
+        <input type="url" class="input" id="edit-image" placeholder="https://images.unsplash.com/photo-...">
+        <div id="edit-image-preview" style="display:none;margin-top:8px">
+          <img id="edit-image-thumb" src="" style="width:100%;height:140px;object-fit:cover;border:1px solid var(--border)" alt="preview">
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px">Khali chhoro to category ki default image lagegi. imgbb.com se free hosting mil sakti hai.</div>
+      </div>
+      <div>
         <div class="label">Full Content</div>
         <textarea class="content-area-edit" id="edit-content"></textarea>
       </div>
@@ -952,6 +960,31 @@ async function rewriteSingle(id) {
   renderQueueList(); renderRewrittenList(); renderTabBadges(); updateStats();
 }
 
+
+// ===== IMAGE HELPERS =====
+function getCatImage(cat) {
+  const map = {
+    Pakistan:      'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&fit=crop',
+    World:         'https://images.unsplash.com/photo-1529437156943-41a6b09e25d9?w=800&fit=crop',
+    Business:      'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&fit=crop',
+    Tech:          'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&fit=crop',
+    Sports:        'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&fit=crop',
+    Health:        'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&fit=crop',
+    Entertainment: 'https://images.unsplash.com/photo-1603190287605-e6ade3cb4a00?w=800&fit=crop',
+    Finance:       'https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=800&fit=crop'
+  };
+  return map[cat] || map['World'];
+}
+
+function validateImage(url, cat) {
+  // Check if URL looks like a real Unsplash photo URL
+  if (url && url.startsWith('https://images.unsplash.com/photo-') && url.includes('unsplash.com/photo-')) {
+    return url;
+  }
+  // Fallback to reliable category image
+  return getCatImage(cat);
+}
+
 async function rewriteArticle(article, apiKey) {
   const keywords = article.keywords ? ` Use these keywords naturally: ${article.keywords}.` : '';
   const baseReqs = `CRITICAL: You MUST provide an original analysis paragraph. You MUST mention the original source domain (${article.source}). Include an engaging Unsplash image URL related to the topic.`;
@@ -1182,8 +1215,32 @@ function openEditModal(id) {
   document.getElementById('edit-content').value = a.newContent || a.origBody;
   document.getElementById('edit-cat').value = a.cat;
   document.getElementById('edit-author').value = 'Admin';
+  const imgVal = a.image || '';
+  document.getElementById('edit-image').value = imgVal;
+  if (imgVal.startsWith('http')) {
+    document.getElementById('edit-image-thumb').src = imgVal;
+    document.getElementById('edit-image-preview').style.display = 'block';
+  } else {
+    document.getElementById('edit-image-preview').style.display = 'none';
+  }
   document.getElementById('edit-modal').classList.add('open');
 }
+
+// Live preview for edit modal image
+document.addEventListener('DOMContentLoaded', function() {
+  const imgInput = document.getElementById('edit-image');
+  if (imgInput) {
+    imgInput.addEventListener('input', function() {
+      const url = this.value.trim();
+      if (url.startsWith('http')) {
+        document.getElementById('edit-image-thumb').src = url;
+        document.getElementById('edit-image-preview').style.display = 'block';
+      } else {
+        document.getElementById('edit-image-preview').style.display = 'none';
+      }
+    });
+  }
+});
 
 function closeEditModal() {
   document.getElementById('edit-modal').classList.remove('open');
@@ -1198,6 +1255,8 @@ function saveEdit() {
   a.excerpt = document.getElementById('edit-excerpt').value;
   a.newContent = document.getElementById('edit-content').value;
   a.cat = document.getElementById('edit-cat').value;
+  const editImg = document.getElementById('edit-image').value.trim();
+  a.image = editImg || getCatImage(a.cat);
   a.status = 'ready';
   closeEditModal();
   publishArticle(editingArticleId);

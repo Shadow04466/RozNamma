@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO-NAME/sitemap.xml
+# OR for Firebase Hosting:
+# Sitemap: https://YOUR-PROJECT-ID.web.app/sitemap.xml

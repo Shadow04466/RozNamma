@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NewsFlow — Admin Guide & Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D0F14;--surface:#141720;--surface2:#1C2030;--surface3:#232840;
+  --border:#2A2F45;--border2:#353B55;
+  --green:#00D68F;--green-dim:#00D68F18;
+  --red:#FF4560;--red-dim:#FF456018;
+  --amber:#FFB347;--amber-dim:#FFB34718;
+  --blue:#4D9FFF;--blue-dim:#4D9FFF18;
+  --purple:#A78BFA;--purple-dim:#A78BFA18;
+  --text:#E8EAF0;--muted:#6B7080;--muted2:#3A404E;
+  --font:'DM Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --head:'Playfair Display',serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.logo{font-family:var(--head);font-size:20px;color:#fff;display:flex;align-items:center;gap:8px}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.nav-links{display:flex;gap:4px;margin-left:auto}
+.nav-a{display:flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;font-weight:600;letter-spacing:.04em;text-decoration:none;color:var(--muted);border:1px solid transparent;transition:all .15s}
+.nav-a:hover{color:var(--text);border-color:var(--border2);background:var(--surface2)}
+.nav-a.active{color:var(--text);border-color:var(--border2);background:var(--surface2)}
+.nav-icon{font-size:13px}
+
+/* HERO */
+.hero{max-width:900px;margin:48px auto 0;padding:0 28px 40px;text-align:center}
+.hero h1{font-family:var(--head);font-size:44px;font-weight:700;margin-bottom:12px;line-height:1.15}
+.hero p{font-size:15px;color:var(--muted);max-width:580px;margin:0 auto 32px;line-height:1.7}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.hbtn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;font-family:var(--font);font-size:13px;font-weight:700;letter-spacing:.04em;text-decoration:none;border:none;cursor:pointer;transition:all .2s}
+.hbtn-green{background:var(--green);color:#000}
+.hbtn-green:hover{background:#00f0a0}
+.hbtn-outline{background:transparent;color:var(--text);border:1px solid var(--border2)}
+.hbtn-outline:hover{background:var(--surface2);border-color:var(--blue);color:var(--blue)}
+
+/* FLOW DIAGRAM */
+.flow{max-width:900px;margin:0 auto 48px;padding:0 28px}
+.flow-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:24px}
+.flow-row{display:flex;align-items:center;gap:0;justify-content:center;flex-wrap:wrap;gap:4px}
+.flow-box{background:var(--surface);border:1px solid var(--border);padding:16px 20px;text-align:center;flex:1;min-width:140px;max-width:200px;position:relative;cursor:pointer;text-decoration:none;display:block;transition:border-color .2s}
+.flow-box:hover{border-color:var(--border2)}
+.flow-box.site{border-color:var(--red);background:var(--red-dim)}
+.flow-box.pipe{border-color:var(--amber);background:var(--amber-dim)}
+.flow-box.guide{border-color:var(--blue);background:var(--blue-dim)}
+.fb-icon{font-size:28px;margin-bottom:6px}
+.fb-name{font-family:var(--head);font-size:14px;font-weight:700;color:var(--text)}
+.fb-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.flow-arrow{font-size:20px;color:var(--border2);flex-shrink:0;padding:0 4px}
+
+/* CONTENT */
+.content{max-width:900px;margin:0 auto;padding:0 28px 80px}
+.section{margin-bottom:48px}
+.section-head{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.section-icon{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.si-red{background:var(--red-dim);border:1px solid var(--red)}
+.si-amber{background:var(--amber-dim);border:1px solid var(--amber)}
+.si-blue{background:var(--blue-dim);border:1px solid var(--blue)}
+.si-green{background:var(--green-dim);border:1px solid var(--green)}
+.si-purple{background:var(--purple-dim);border:1px solid var(--purple)}
+.section-head h2{font-family:var(--head);font-size:22px;font-weight:700}
+.section-head p{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* STEP CARDS */
+.steps{display:flex;flex-direction:column;gap:12px}
+.step{background:var(--surface);border:1px solid var(--border);padding:16px 20px;display:flex;gap:16px;align-items:flex-start}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+.sn-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red)}
+.sn-amber{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber)}
+.sn-blue{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue)}
+.sn-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green)}
+.step-body{}
+.step-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.6}
+.step-code{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid var(--border);padding:6px 10px;margin-top:8px;color:var(--blue);display:block;word-break:break-all}
+
+/* FEATURE GRID */
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.feature-card{background:var(--surface);border:1px solid var(--border);padding:16px 18px}
+.fc-icon{font-size:22px;margin-bottom:8px}
+.fc-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.fc-desc{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* TABLE */
+.info-table{width:100%;border-collapse:collapse;font-size:12px}
+.info-table th{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.info-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.info-table tr:last-child td{border-bottom:none}
+.info-table tr:hover td{background:var(--surface2)}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:2px}
+.tag-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green)}
+.tag-amber{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber)}
+.tag-blue{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue)}
+.tag-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red)}
+
+/* CHECKLIST */
+.checklist{display:flex;flex-direction:column;gap:8px}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border)}
+.check-item input[type=checkbox]{width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--green);cursor:pointer}
+.check-label{font-size:13px;line-height:1.5;cursor:pointer}
+.check-label.done{text-decoration:line-through;color:var(--muted)}
+
+/* STATUS BAR */
+.status-bar{background:var(--surface);border:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+.sb-item{display:flex;align-items:center;gap:8px;font-size:12px}
+.sb-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* FOOTER */
+.footer{background:var(--surface);border-top:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted);flex-wrap:wrap;gap:10px}
+
+@media(max-width:700px){
+  .flow-row{flex-direction:column;align-items:center}
+  .flow-arrow{transform:rotate(90deg)}
+  .hero h1{font-size:30px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo"><div class="logo-dot"></div>NewsFlow Admin</div>
+  <div class="nav-links">
+    <a class="nav-a" href="index.html"><span class="nav-icon">📰</span>News Site</a>
+    <a class="nav-a" href="pipeline.html"><span class="nav-icon">⚙</span>Pipeline</a>
+    <a class="nav-a" href="guide.html" class="active">📋 Guide</a>
+    <a class="nav-a" href="deploy.html" style="color:var(--blue);border-color:var(--blue)">🚀 Deploy</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>NewsFlow CMS<br><span style="color:var(--green)">Admin Guide</span></h1>
+  <p>تینوں tools کو آپس میں کیسے استعمال کریں — step by step مکمل راہنمائی</p>
+  <div class="hero-btns">
+    <a class="hbtn hbtn-green" href="index.html">📰 News Site کھولیں</a>
+    <a class="hbtn hbtn-outline" href="pipeline.html">⚙ Pipeline کھولیں</a>
+  </div>
+</div>
+
+<!-- FLOW DIAGRAM -->
+<div class="flow">
+  <div class="flow-title">System Architecture — تینوں Files کا Connection</div>
+  <div class="flow-row">
+    <a class="flow-box pipe" href="pipeline.html">
+      <div class="fb-icon">⚙</div>
+      <div class="fb-name">pipeline.html</div>
+      <div class="fb-sub">Target sites سے خبریں fetch کریں<br>AI سے rewrite کریں</div>
+    </a>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="border-color:var(--purple);background:var(--purple-dim);cursor:default">
+      <div class="fb-icon">💾</div>
+      <div class="fb-name">localStorage</div>
+      <div class="fb-sub">Shared storage<br>nf_shared_published</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <a class="flow-box site" href="index.html">
+      <div class="fb-icon">📰</div>
+      <div class="fb-name">index.html</div>
+      <div class="fb-sub">News site — publish<br>ہر 30 سیکنڈ میں check</div>
+    </a>
+  </div>
+  <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--muted)">
+    Pipeline میں Publish کریں → localStorage → News Site خودکار notify ہوتی ہے → ایک click سے Import
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="content">
+<div class="status-bar">
+  <div class="sb-item"><div class="sb-dot" style="background:var(--red)"></div><span>News Site</span><strong style="color:var(--text);margin-left:4px" id="sb-posts">لوڈ ہو رہا ہے...</strong></div>
+  <div class="sb-item"><div class="sb-dot" style="background:var(--amber)"></div><span>Pipeline Queue</span><strong style="color:var(--text);margin-left:4px" id="sb-queue">لوڈ ہو رہا ہے...</strong></div>
+  <div class="sb-item"><div class="sb-dot" style="background:var(--purple)"></div><span>Shared (Pending Import)</span><strong style="color:var(--green);margin-left:4px" id="sb-shared">0</strong></div>
+  <div class="sb-item" style="margin-left:auto">
+    <a href="index.html" style="font-size:11px;color:var(--blue);text-decoration:none">Site کھولیں →</a>
+    <span style="margin:0 8px;color:var(--border2)">|</span>
+    <a href="pipeline.html" style="font-size:11px;color:var(--amber);text-decoration:none">Pipeline کھولیں →</a>
+  </div>
+</div>
+
+<!-- SECTION 1 — HOW IT WORKS -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-icon si-green">🔗</div>
+    <div>
+      <h2>تینوں Files کیسے Connected ہیں</h2>
+      <p>Data flow اور real-time sync کا طریقہ</p>
+    </div>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="fc-icon">⚙</div>
+      <div class="fc-title" style="color:var(--amber)">pipeline.html</div>
+      <div class="fc-desc">Target websites سے خبریں scrape کرتا ہے۔ AI سے rewrite کرتا ہے۔ Publish کرنے پر <code style="font-family:var(--mono);background:var(--surface2);padding:1px 4px">localStorage</code> میں <code style="font-family:var(--mono);background:var(--surface2);padding:1px 4px">nf_shared_published</code> key پر لکھتا ہے۔</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">💾</div>
+      <div class="fc-title" style="color:var(--purple)">Shared localStorage</div>
+      <div class="fc-desc">Browser کا مشترکہ storage جو تینوں files پڑھ سکتی ہیں۔ <code style="font-family:var(--mono);background:var(--surface2);padding:1px 4px">nf_shared_published</code> — pipeline سے news site تک data پہنچاتا ہے۔ <code style="font-family:var(--mono);background:var(--surface2);padding:1px 4px">nf_site_posts</code> — news site کے تمام posts save رہتے ہیں۔</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">📰</div>
+      <div class="fc-title" style="color:var(--red)">index.html</div>
+      <div class="fc-desc">ہر 30 سیکنڈ میں shared storage check کرتا ہے۔ نئے articles ملنے پر notification دکھاتا ہے۔ ایک click سے سب articles import ہو جاتے ہیں۔ Posts localStorage میں save رہتے ہیں — page refresh پر بھی۔</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2 — WORKFLOW STEPS -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-icon si-amber">⚡</div>
+    <div>
+      <h2>مکمل Workflow — Step by Step</h2>
+      <p>پہلی بار setup سے لے کر روزانہ استعمال تک</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num sn-blue">1</div>
+      <div class="step-body">
+        <div class="step-title">Pipeline کھولیں اور API Key ڈالیں</div>
+        <div class="step-desc">pipeline.html کھولیں۔ اوپر بائیں طرف اپنا AI provider چنیں (Claude، GPT، Gemini، Groq وغیرہ)۔ API key ڈالیں — یہ browser میں save ہو جائے گی۔</div>
+        <code class="step-code">pipeline.html → AI Model Settings → Provider چنیں → API Key ڈالیں</code>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num sn-amber">2</div>
+      <div class="step-body">
+        <div class="step-title">Target Site کا URL ڈالیں</div>
+        <div class="step-desc">جس site سے خبریں لینی ہوں اس کا URL ڈالیں۔ Interval (30 منٹ)، Category، اور Rewrite Style چنیں۔ "Add Source" دبائیں۔</div>
+        <code class="step-code">مثال: https://geo.tv/latest-news → Category: Pakistan → Style: Urdu → Add Source</code>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num sn-blue">3</div>
+      <div class="step-body">
+        <div class="step-title">Fetch کریں</div>
+        <div class="step-desc">"⟳ Fetch Now" دبائیں۔ Pipeline target site سے headlines اور content لے آئے گا اور Queue میں دکھائے گا۔ ہر 30 منٹ پر یہ خودکار ہو گا۔</div>
+        <code class="step-code">Queue Tab → articles دکھیں گے → Status: NEW</code>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num sn-amber">4</div>
+      <div class="step-body">
+        <div class="step-title">AI Rewrite کریں</div>
+        <div class="step-desc">"✦ AI Rewrite All" دبائیں۔ AI ہر article کو نئے الفاظ میں لکھے گا — آپ کے chosen style میں (اردو، English، SEO، وغیرہ)۔ Status READY ہو جائے گی۔</div>
+        <code class="step-code">AI Rewrite All → ہر article کی نئی headline، excerpt، اور مکمل مضمون</code>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num sn-green">5</div>
+      <div class="step-body">
+        <div class="step-title">News Site پر Publish کریں</div>
+        <div class="step-desc">"↑ Publish All Ready" دبائیں۔ Articles shared localStorage میں چلے جاتے ہیں۔ News Site (index.html) کھولیں — اوپر notification آئے گا۔ "ابھی Import کریں" دبائیں۔</div>
+        <code class="step-code">Publish → index.html → notification → Import کریں → Articles live!</code>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num sn-blue">6</div>
+      <div class="step-body">
+        <div class="step-title">روزانہ کا معمول</div>
+        <div class="step-desc">Pipeline میں sources ایک بار add کریں — پھر یہ خود کار ہے۔ ہر 30 منٹ پر fetch ہوگا۔ News Site ہر 30 سیکنڈ میں check کرتی ہے۔ آپ کو صرف articles review کر کے publish کرنا ہے۔</div>
+        <code class="step-code">Setup once → Pipeline runs automatically → Site notifies → One click import</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3 — AI PROVIDERS -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-icon si-purple">🤖</div>
+    <div>
+      <h2>AI Models — کون سا بہترین ہے</h2>
+      <p>6 providers کا موازنہ — news rewriting کے لیے</p>
+    </div>
+  </div>
+  <table class="info-table">
+    <tr>
+      <th>Provider</th><th>بہترین Model</th><th>رفتار</th><th>معیار</th><th>قیمت</th><th>مفت tier</th>
+    </tr>
+    <tr>
+      <td><strong>🟠 Claude (Anthropic)</strong></td>
+      <td><span style="font-family:var(--mono);font-size:11px">claude-sonnet-4-5</span></td>
+      <td><span class="tag tag-green">تیز</span></td>
+      <td><span class="tag tag-blue">بہترین</span></td>
+      <td>$$</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td><strong>⚫ GPT (OpenAI)</strong></td>
+      <td><span style="font-family:var(--mono);font-size:11px">gpt-4o-mini</span></td>
+      <td><span class="tag tag-green">تیز</span></td>
+      <td><span class="tag tag-blue">بہت اچھا</span></td>
+      <td>$</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td><strong>🔵 Gemini (Google)</strong></td>
+      <td><span style="font-family:var(--mono);font-size:11px">gemini-2.0-flash</span></td>
+      <td><span class="tag tag-green">بہت تیز</span></td>
+      <td><span class="tag tag-amber">اچھا</span></td>
+      <td style="color:var(--green)">مفت!</td>
+      <td>✅ 1M ctx</td>
+    </tr>
+    <tr>
+      <td><strong>🟣 Groq</strong></td>
+      <td><span style="font-family:var(--mono);font-size:11px">llama-3.3-70b</span></td>
+      <td><span class="tag tag-green">سب سے تیز</span></td>
+      <td><span class="tag tag-amber">اچھا</span></td>
+      <td style="color:var(--green)">مفت!</td>
+      <td>✅ free tier</td>
+    </tr>
+    <tr>
+      <td><strong>🔴 Mistral</strong></td>
+      <td><span style="font-family:var(--mono);font-size:11px">mistral-small</span></td>
+      <td><span class="tag tag-green">تیز</span></td>
+      <td><span class="tag tag-amber">اچھا</span></td>
+      <td>$</td>
+      <td>✅ nemo free</td>
+    </tr>
+    <tr>
+      <td><strong>🟢 Cohere</strong></td>
+      <td><span style="font-family:var(--mono);font-size:11px">command-r</span></td>
+      <td><span class="tag tag-amber">درمیانہ</span></td>
+      <td><span class="tag tag-amber">اچھا</span></td>
+      <td>$</td>
+      <td>✅ trial</td>
+    </tr>
+  </table>
+  <div style="margin-top:12px;padding:12px 16px;background:var(--green-dim);border:1px solid var(--green);font-size:12px;color:var(--green)">
+    💡 <strong>سفارش:</strong> شروع میں <strong>Groq (LLaMA 3.3 70B)</strong> یا <strong>Gemini 2.0 Flash</strong> استعمال کریں — یہ مفت ہیں اور کافی اچھے نتائج دیتے ہیں۔ بعد میں Claude Sonnet پر upgrade کریں۔
+  </div>
+</div>
+
+<!-- SECTION 4 — REWRITE STYLES -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-icon si-red">✍</div>
+    <div>
+      <h2>Rewrite Styles — کب کون سا استعمال کریں</h2>
+      <p>Pipeline میں source add کرتے وقت style چنیں</p>
+    </div>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="fc-icon">🔄</div>
+      <div class="fc-title">Rewrite (English)</div>
+      <div class="fc-desc">اصل خبر کو مکمل نئے انگریزی الفاظ میں لکھتا ہے۔ General news کے لیے بہترین۔</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🇵🇰</div>
+      <div class="fc-title">Urdu Translate</div>
+      <div class="fc-desc">English خبر کو اردو میں translate کر کے rewrite کرتا ہے۔ پاکستانی audience کے لیے۔</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">📊</div>
+      <div class="fc-title">Expand + Analysis</div>
+      <div class="fc-desc">خبر کو background، context، اور تجزیے کے ساتھ expand کرتا ہے۔ Long-form content کے لیے۔</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">⚡</div>
+      <div class="fc-title">Short Summary</div>
+      <div class="fc-desc">صرف اہم باتیں — 2 پیراگراف میں مختصر خبر۔ Breaking news کے لیے۔</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🔍</div>
+      <div class="fc-title">SEO Optimized</div>
+      <div class="fc-desc">Keywords کے ساتھ SEO-friendly rewrite۔ Google ranking کے لیے بہترین۔</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🏛</div>
+      <div class="fc-title">Formal AP Style</div>
+      <div class="fc-desc">صحافتی AP style میں باقاعدہ خبر۔ Professional news sites کے لیے۔</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 5 — LAUNCH CHECKLIST -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-icon si-green">✅</div>
+    <div>
+      <h2>Launch Checklist</h2>
+      <p>سب کچھ تیار ہے؟ ہر item check کریں</p>
+    </div>
+  </div>
+  <div class="checklist" id="checklist">
+    <div class="check-item"><input type="checkbox" id="c1" onchange="checkItem(this)"><label class="check-label" for="c1"><strong>pipeline.html کھولا اور AI API key ڈالی</strong> — کم از کم ایک provider configure کیا</label></div>
+    <div class="check-item"><input type="checkbox" id="c2" onchange="checkItem(this)"><label class="check-label" for="c2"><strong>کم از کم ایک target source add کیا</strong> — URL اور 30 min interval کے ساتھ</label></div>
+    <div class="check-item"><input type="checkbox" id="c3" onchange="checkItem(this)"><label class="check-label" for="c3"><strong>Fetch Now test کیا</strong> — articles queue میں آئے</label></div>
+    <div class="check-item"><input type="checkbox" id="c4" onchange="checkItem(this)"><label class="check-label" for="c4"><strong>AI Rewrite test کیا</strong> — کم از کم ایک article rewrite ہوا</label></div>
+    <div class="check-item"><input type="checkbox" id="c5" onchange="checkItem(this)"><label class="check-label" for="c5"><strong>Publish کیا اور index.html پر import test کیا</strong> — notification آئی اور article site پر دکھا</label></div>
+    <div class="check-item"><input type="checkbox" id="c6" onchange="checkItem(this)"><label class="check-label" for="c6"><strong>News Site پر manually post لکھ کر دیکھی</strong> — "+ New Post" button کام کر رہا ہے</label></div>
+    <div class="check-item"><input type="checkbox" id="c7" onchange="checkItem(this)"><label class="check-label" for="c7"><strong>تینوں files ایک ہی folder میں ہیں</strong> — newssite/index.html، newssite/pipeline.html، newssite/guide.html</label></div>
+    <div class="check-item"><input type="checkbox" id="c8" onchange="checkItem(this)"><label class="check-label" for="c8"><strong>AdSense account apply کیا یا تیاری شروع کی</strong> — ads.txt file بنائی</label></div>
+    <div class="check-item"><input type="checkbox" id="c9" onchange="checkItem(this)"><label class="check-label" for="c9"><strong>Hosting پر upload کیا</strong> — InfinityFree / GitHub Pages / کوئی بھی</label></div>
+    <div class="check-item"><input type="checkbox" id="c10" onchange="checkItem(this)"><label class="check-label" for="c10"><strong>Google Search Console میں site submit کی</strong></label></div>
+  </div>
+  <div style="margin-top:16px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);font-size:13px;display:flex;align-items:center;gap:10px">
+    <span>Progress:</span>
+    <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+      <div style="height:100%;background:var(--green);border-radius:3px;transition:width .3s" id="progress-bar" style="width:0%"></div>
+    </div>
+    <span id="progress-text" style="font-family:var(--mono);font-size:11px;color:var(--green);min-width:40px">0/10</span>
+  </div>
+</div>
+
+<!-- SECTION 6 — QUICK LINKS TABLE -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-icon si-blue">🔗</div>
+    <div><h2>تمام Links اور Resources</h2></div>
+  </div>
+  <table class="info-table">
+    <tr><th>Resource</th><th>Link</th><th>مقصد</th></tr>
+    <tr><td><strong>📰 News Site</strong></td><td><a href="index.html" style="color:var(--blue);font-family:var(--mono);font-size:11px">index.html</a></td><td>آپ کی news website — readers یہاں آتے ہیں</td></tr>
+    <tr><td><strong>⚙ Content Pipeline</strong></td><td><a href="pipeline.html" style="color:var(--amber);font-family:var(--mono);font-size:11px">pipeline.html</a></td><td>خبریں fetch اور AI rewrite کریں</td></tr>
+    <tr><td><strong>📋 Admin Guide</strong></td><td><a href="guide.html" style="color:var(--green);font-family:var(--mono);font-size:11px">guide.html</a></td><td>یہی صفحہ — راہنمائی اور checklist</td></tr>
+    <tr><td>Anthropic Console</td><td><a href="https://console.anthropic.com" target="_blank" style="color:var(--blue);font-family:var(--mono);font-size:11px">console.anthropic.com</a></td><td>Claude API key حاصل کریں</td></tr>
+    <tr><td>OpenAI Platform</td><td><a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--blue);font-family:var(--mono);font-size:11px">platform.openai.com</a></td><td>GPT API key</td></tr>
+    <tr><td>Google AI Studio</td><td><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue);font-family:var(--mono);font-size:11px">aistudio.google.com</a></td><td>Gemini API key (مفت)</td></tr>
+    <tr><td>Groq Console</td><td><a href="https://console.groq.com/keys" target="_blank" style="color:var(--blue);font-family:var(--mono);font-size:11px">console.groq.com</a></td><td>Groq API key (مفت، سب سے تیز)</td></tr>
+    <tr><td>Google AdSense</td><td><a href="https://adsense.google.com" target="_blank" style="color:var(--blue);font-family:var(--mono);font-size:11px">adsense.google.com</a></td><td>Monetization کے لیے apply کریں</td></tr>
+    <tr><td>InfinityFree Hosting</td><td><a href="https://infinityfree.net" target="_blank" style="color:var(--blue);font-family:var(--mono);font-size:11px">infinityfree.net</a></td><td>مفت web hosting</td></tr>
+    <tr><td>Cloudflare</td><td><a href="https://cloudflare.com" target="_blank" style="color:var(--blue);font-family:var(--mono);font-size:11px">cloudflare.com</a></td><td>مفت CDN اور SSL</td></tr>
+    <tr><td>Google Search Console</td><td><a href="https://search.google.com/search-console" target="_blank" style="color:var(--blue);font-family:var(--mono);font-size:11px">search.google.com/search-console</a></td><td>SEO indexing</td></tr>
+    <tr><td>PageSpeed Insights</td><td><a href="https://pagespeed.web.dev" target="_blank" style="color:var(--blue);font-family:var(--mono);font-size:11px">pagespeed.web.dev</a></td><td>Site speed check کریں</td></tr>
+  </table>
+</div>
+
+</div><!-- end .content -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>NewsFlow CMS v3.0 · <span style="color:var(--green)">تینوں files linked</span></span>
+  <div style="display:flex;gap:16px">
+    <a href="index.html" style="color:var(--muted);text-decoration:none">📰 News Site</a>
+    <a href="pipeline.html" style="color:var(--muted);text-decoration:none">⚙ Pipeline</a>
+    <a href="guide.html" style="color:var(--green);text-decoration:none">📋 Guide (یہاں ہیں)</a>
+  </div>
+</div>
+
+<script>
+// Live status from localStorage
+function updateStatus() {
+  try {
+    const posts = JSON.parse(localStorage.getItem('nf_site_posts') || '[]');
+    document.getElementById('sb-posts').textContent = posts.filter(p=>p.status==='published').length + ' published';
+  } catch(e){ document.getElementById('sb-posts').textContent = 'N/A'; }
+
+  try {
+    const shared = JSON.parse(localStorage.getItem('nf_shared_published') || '[]');
+    const pending = shared.filter(p=>!p._imported).length;
+    document.getElementById('sb-shared').textContent = pending;
+    document.getElementById('sb-shared').style.color = pending > 0 ? 'var(--green)' : 'var(--muted)';
+    document.getElementById('sb-queue').textContent = shared.length + ' total in pipeline';
+  } catch(e){ document.getElementById('sb-shared').textContent = '0'; }
+}
+
+// Checklist progress
+function checkItem(cb) {
+  const label = cb.nextElementSibling;
+  label.classList.toggle('done', cb.checked);
+  // save state
+  const state = {};
+  document.querySelectorAll('.check-item input').forEach(c => state[c.id] = c.checked);
+  localStorage.setItem('nf_guide_checklist', JSON.stringify(state));
+  updateProgress();
+}
+
+function updateProgress() {
+  const all = document.querySelectorAll('.check-item input');
+  const done = [...all].filter(c=>c.checked).length;
+  const pct = Math.round((done/all.length)*100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = done + '/' + all.length;
+}
+
+function loadChecklist() {
+  try {
+    const state = JSON.parse(localStorage.getItem('nf_guide_checklist') || '{}');
+    document.querySelectorAll('.check-item input').forEach(c => {
+      if(state[c.id]) { c.checked = true; c.nextElementSibling.classList.add('done'); }
+    });
+    updateProgress();
+  } catch(e){}
+}
+
+updateStatus();
+loadChecklist();
+setInterval(updateStatus, 5000);
+</script>
+</body>
+</html>
